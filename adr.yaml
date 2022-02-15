@@ -8,7 +8,7 @@ info:
     name: Adatree Pty Ltd
     url: https://adatree.com.au
     email: engineering@adatree.com.au
-  version: "1.0.0"
+  version: "2.0.1"
 servers:
   - url: https://cdr-insights-prod.api.adatree.com.au
 security:
@@ -17,7 +17,7 @@ paths:
   /adr/consents:
     get:
       security:
-        - m2m: [ 'adr:consents:read' ]
+        - bearerAuth: [ 'adr:consents:read' ]
       tags:
         - Consents
       summary: Get Consents
@@ -172,7 +172,7 @@ paths:
   /adr/consents/{consentId}:
     get:
       security:
-        - m2m: [ 'adr:consents:read' ]
+        - bearerAuth: [ 'adr:consents:read' ]
       tags:
         - Consents
       summary: Get Consent
@@ -258,7 +258,7 @@ paths:
   /adr/consents/{consentId}/history:
     get:
       security:
-        - m2m: [ 'adr:consents:read' ]
+        - bearerAuth: [ 'adr:consents:read' ]
       tags:
         - Consents
       summary: Get Consent History
@@ -289,7 +289,7 @@ paths:
   /consent-mgmt/consents/events:
     get:
       security:
-        - m2m: [ 'adr:consents:read' ]
+        - bearerAuth: [ 'adr:consents:read' ]
       tags:
         - Consent events
       summary: Retrieve consent events
@@ -1128,15 +1128,6 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-    m2m:
-      type: oauth2
-      description: Machine to machine OAuth2 for scope management
-      flows:
-        clientCredentials:
-          tokenUrl: https://adatree-adr.au.auth0.com/oauth/token
-          scopes:
-            'adr:consents:read': allow ADR to read customer consent data
-            'adr:consents:write': allow ADR to revoke a consent of a customer
   schemas:
     RequestAccountIds:
       type: object
