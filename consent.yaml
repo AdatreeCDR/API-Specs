@@ -1,0 +1,714 @@
+openapi: 3.0.1
+info:
+  title: Adatree ADR Platform Consent API
+  description: A Consent API for ADRs. This allows ADRs to query for consents granted by their customers to access CDR consumer data. It also provides a mechanism to configure scopes and use-cases which are then made available in the consent dashboard.
+  contact:
+    name: Adatree Pty Ltd
+    url: 'https://adatree.com.au'
+    email: engineering@adatree.com.au
+  version: '1.0.0'
+servers:
+  - url: https://cdr-insights-prod.api.adatree.com.au
+paths:
+  /adr/consents:
+    get:
+      security:
+        - bearerAuth: ['adr:consents:read']
+      tags:
+        - Consents
+      summary: Get Consents
+      description: Retrieve consent record
+      operationId: findConsents
+      parameters:
+        - name: consumerId
+          in: query
+          description: consumeId, please be kindly reminded of proper encoding as Id from some IDP could have special character like '|', which need be encoded as '%7c'
+          example: auth0%7c5fbc585628421a006e83d95d
+          required: false
+          schema:
+            type: string
+        - name: consentId
+          in: query
+          example: 148c9187-e52b-431f-9b24-7225e75ca2be
+          required: false
+          schema:
+            type: string
+        - name: cdrArrangementId
+          in: query
+          example: 45db4977-b12f-42bf-808d-2680eb4bd366
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          example: ACTIVE
+          schema:
+            type: string
+            enum: [REQUESTED, ACTIVE, REVOKED, EXPIRED]
+        - name: accessFrequency
+          in: query
+          required: false
+          example: ONCE_OFF
+          schema:
+            type: string
+            enum: [ONCE_OFF, ONGOING]
+        - name: postUsageAction
+          in: query
+          required: false
+          example: DELETION
+          schema:
+            type: string
+            enum: [DELETION, DE_IDENTIFICATION]
+        - name: directMarketingAllowed
+          in: query
+          required: false
+          example: false
+          schema:
+            type: boolean
+        - name: useCases
+          description: UseCase ids
+          in: query
+          required: false
+          example: [HOME_LOAN]
+          schema:
+            type: array
+            items:
+              type: string
+        - name: dataHolderBrandId
+          in: query
+          required: false
+          example: 55b3299a-3e50-48a2-a190-cca263ccaba5
+          schema:
+            type: string
+        - name: oldestCreated
+          description: Constrain the consent with created time at or after this date/time. If absent defaults to newestCreated
+            minus 90 days.  Format is aligned to DateTimeString common type
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            x-cds-type: DateTimeString
+            example: "1997-01-12T15:43:00.121Z"
+        - name: newestCreated
+          description: Constrain the consent with created time at or before this date/time. If absent defaults to today.
+            Format is aligned to DateTimeString common type
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            x-cds-type: DateTimeString
+            example: "1997-01-12T15:43:00.121Z"
+        - name: oldestRevoked
+          description: Constrain the consent with revoked time at or after this date/time. If absent defaults to newestRevoked
+            minus 90 days.  Format is aligned to DateTimeString common type
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            x-cds-type: DateTimeString
+            example: "1997-01-12T15:43:00.121Z"
+        - name: newestRevoked
+          description: Constrain the consent with revoked time at or before this date/time. If absent defaults to today.
+            Format is aligned to DateTimeString common type
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            x-cds-type: DateTimeString
+          example: "1997-01-12T15:43:00.121Z"
+        - name: oldestSharingEndDate
+          description: Constrain the consent with sharingEndDate time at or after this date/time. If absent defaults to newestSharingEndDate
+            minus 90 days.  Format is aligned to DateTimeString common type
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            x-cds-type: DateTimeString
+          example: "1997-01-12T15:43:00.121Z"
+        - name: newestSharingEndDate
+          description: Constrain the consent with sharingEndDate time at or before this date/time. If absent defaults to today.
+            Format is aligned to DateTimeString common type
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            x-cds-type: DateTimeString
+            example: "1997-01-12T15:43:00.121Z"
+        - name: externalId
+          description: Constrain the consent by externalId
+          in: query
+          required: false
+          schema:
+            type: string
+          example: an-external-id
+      responses:
+        200:
+          description: successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConsentResponse'
+        400:
+          $ref: '#/components/responses/400BadRequest'
+        401:
+          $ref: '#/components/responses/401Unauthorised'
+        403:
+          $ref: '#/components/responses/403Forbidden'
+        429:
+          $ref: '#/components/responses/429RateLimited'
+  /adr/consents/{consentId}:
+    get:
+      security:
+        - bearerAuth: ['adr:consents:read']
+      tags:
+        - Consents
+      summary: Get Consent
+      description: Retreive an individual consent record
+      operationId: getConsent
+      parameters:
+        - name: consentId
+          in: path
+          required: true
+          example: 148c9187-e52b-431f-9b24-7225e75ca2be
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentResponse'
+        401:
+          $ref: '#/components/responses/401Unauthorised'
+        403:
+          $ref: '#/components/responses/403Forbidden'
+        404:
+          $ref: '#/components/responses/404NotFound'
+        429:
+          $ref: '#/components/responses/429RateLimited'
+    patch:
+      security:
+        - bearerAuth: [ 'adr:consents:write' ]
+      tags:
+        - Consents
+      summary: Update Consent
+      description: update externalId of a consent
+      operationId: updateConsentAdr
+      parameters:
+        - name: consentId
+          in: path
+          example: 148c9187-e52b-431f-9b24-7225e75ca2be
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdrUpdateConsent'
+      responses:
+        200:
+          description: consent successfully updated
+        401:
+          $ref: '#/components/responses/401Unauthorised'
+        403:
+          $ref: '#/components/responses/403Forbidden'
+        404:
+          $ref: '#/components/responses/404NotFound'
+        429:
+          $ref: '#/components/responses/429RateLimited'
+    delete:
+      tags:
+        - Consents
+      summary: Revoke Consent
+      description: Allows Data Recipient to revoke a single consent record. This API is idempotent.
+      operationId: revokeConsent
+      parameters:
+        - name: consentId
+          in: path
+          example: 148c9187-e52b-431f-9b24-7225e75ca2be
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: default response
+        401:
+          $ref: '#/components/responses/401Unauthorised'
+        403:
+          $ref: '#/components/responses/403Forbidden'
+        404:
+          $ref: '#/components/responses/404NotFound'
+        429:
+          $ref: '#/components/responses/429RateLimited'
+  /adr/consents/{consentId}/history:
+    get:
+      security:
+        - bearerAuth: ['adr:consents:read']
+      tags:
+        - Consents
+      summary: Get Consent History
+      description: Retreive an individual consent record's change history
+      operationId: getHistory
+      parameters:
+        - name: consentId
+          in: path
+          required: true
+          example: 148c9187-e52b-431f-9b24-7225e75ca2be
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentHistoryResponse'
+        401:
+          $ref: '#/components/responses/401Unauthorised'
+        403:
+          $ref: '#/components/responses/403Forbidden'
+        404:
+          $ref: '#/components/responses/404NotFound'
+        429:
+          $ref: '#/components/responses/429RateLimited'
+  /consent-mgmt/consents/events:
+    get:
+      security:
+        - bearerAuth: ['adr:consents:read']
+      tags:
+        - Consent events
+      summary: Retrieve consent events
+      operationId: getConsentEvents
+      parameters:
+        - name: oldest
+          description: Constrain the consent event result list with timestamp at or after this date/time. Format is aligned to DateTimeString common type
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            x-cds-type: DateTimeString
+            example: "2022-02-06T08:17:26Z"
+        - name: newest
+          description: Constrain the consent event result list with timestamp at or before this date/time. Format is aligned to DateTimeString common type
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            x-cds-type: DateTimeString
+            example: "2022-02-01T15:43:00.121Z"
+        - $ref: '#/components/parameters/ParamPage'
+        - $ref: '#/components/parameters/ParamPageSize'
+      responses:
+        200:
+          description: list of ConsentEvent with pagination
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentEventList'
+        400:
+          $ref: '#/components/responses/400BadRequest'
+        401:
+          $ref: '#/components/responses/401Unauthorised'
+        403:
+          $ref: '#/components/responses/403Forbidden'
+        429:
+          $ref: '#/components/responses/429RateLimited'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ConsentEventData:
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConsentEvent'
+    ConsentEvent:
+      type: object
+      required: [eventType, timestamp, cdrArrangementId, consumerId, consentId, postUsageAction]
+      properties:
+        eventId:
+          type: string
+          description: a UUID of the event that could be used for idempotent event processing
+          example: 32dd2e21-e7c8-44b1-b379-39e2ccd7a097
+        eventType:
+          type: string
+          description: |
+            This identifies the different types of events through a consent's lifecycle. <br/>
+            A consent becomes GRANTED after consumer consent with Data Holder<br/>
+            it can be revoked by a consumer via ADR or Data Holder<br/>
+            an ongoing consent will expire on (if it is not revoked prior to) sharing end date
+            a once_off consent will expire within 24 hours after the consent is GRANTED
+          enum: [GRANTED, REVOKED, EXPIRED]
+        timestamp:
+          type: string
+          format: date-time
+          x-cds-type: DateTimeString
+          example: "2022-01-20T15:00:00.999Z"
+        cdrArrangementId:
+          type: string
+          example: 854d862c-5466-11eb-ae93-0242ac130002
+        consentId:
+          type: string
+          example: 148c9187-e52b-431f-9b24-7225e75ca2be
+        consumerId:
+          type: string
+          example: abedfaas-asdfsf-4asdf-1465-sfsadf3413
+        postUsageAction:
+          $ref: '#/components/schemas/PostUsageAction'
+        externalId:
+          type: string
+          example: external-id-by-adatree-customer
+        sharingEndDate:
+          type: string
+          format: date-time
+        consumerEmail:
+          type: string
+          example: "consumer@example.com"
+        consumerMobileNumber:
+          type: string
+          example: "00614000555666"
+    ConsentEventList:
+      type: object
+      required:
+        - data
+        - links
+        - meta
+      properties:
+        data:
+          $ref: '#/components/schemas/ConsentEventData'
+        links:
+          $ref: '#/components/schemas/LinksPaginated'
+        meta:
+          $ref: '#/components/schemas/MetaPaginated'
+    LinksPaginated:
+      type: object
+      required:
+        - self
+      properties:
+        self:
+          type: string
+          description: Fully qualified link that generated the current response document.
+            https://self.example.com.au will be converted to https://self.example.com.au?page=1&page-size=25
+          example: https://self.example.com.au?page=3&page-size=25
+          x-cds-type: URIString
+        first:
+          type: string
+          description: URI to the first page of this set. Mandatory if this response is not the first page
+          example: https://self.example.com.au?page=1&page-size=25
+          x-cds-type: URIString
+        prev:
+          type: string
+          description: URI to the previous page of this set. Mandatory if this response is not the first page
+          example: https://self.example.com.au?page=2&page-size=25
+          x-cds-type: URIString
+        next:
+          type: string
+          description: URI to the next page of this set. Mandatory if this response is not the last page
+          example: https://self.example.com.au?page=4&page-size=25
+          x-cds-type: URIString
+        last:
+          type: string
+          description: URI to the last page of this set. Mandatory if this response is not the last page
+          example: https://self.example.com.au?page=15&page-size=25
+          x-cds-type: URIString
+      x-conditional:
+        - prev
+        - next
+        - first
+        - last
+    MetaPaginated:
+      type: object
+      required:
+        - totalPages
+        - totalRecords
+      properties:
+        totalPages:
+          type: integer
+          description: The total number of pages in the full set.
+          example: 4
+          x-cds-type: NaturalNumber
+        totalRecords:
+          type: integer
+          description: The total number of records in the full set.
+          example: 95
+          x-cds-type: NaturalNumber
+    ConsentHistoryResponse:
+      type: object
+      properties:
+        consents:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConsentResponse'
+    ConsentResponse:
+      type: object
+      properties:
+        version:
+          type: integer
+          format: int32
+          example: 1.0
+        created:
+          type: string
+          format: date-time
+          x-cds-type: DateTimeString
+          example: "1997-01-12T15:43:00.121Z"
+        revoked:
+          type: string
+          format: date-time
+          x-cds-type: DateTimeString
+          example: "1997-01-12T15:43:00.121Z"
+        lastNotificationSentAt:
+          type: string
+          format: date-time
+          x-cds-type: DateTimeString
+          example: "1997-01-12T15:43:00.121Z"
+        firstDataCollection:
+          type: string
+          format: date-time
+          x-cds-type: DateTimeString
+          example: "2012-01-12T15:43:00.121Z"
+        status:
+          $ref: '#/components/schemas/Status'
+        sharingEndDate:
+          type: string
+          format: date-time
+          x-cds-type: DateTimeString
+          example: "1997-01-12T15:43:00.121Z"
+        consumerEmail:
+          type: string
+          example: "consumer@example.com"
+        dataHolderName:
+          type: string
+          example: ANZ
+        dataHolderBrandId:
+          type: string
+          example: f632041c-d7c8-4679-a165-aa406cd62b13
+        useCase:
+          $ref: '#/components/schemas/UseCaseResponse'
+        postUsageAction:
+          $ref: '#/components/schemas/PostUsageAction'
+        consumerId:
+          type: string
+          example: abedfaas-asdfsf-4asdf-1465-sfsadf3413
+        cdrArrangementId:
+          type: string
+          example: 86a5d068-447a-4765-95c2-6f5d85d9d658
+        consentId:
+          type: string
+          example: 7c7853a6-5466-11eb-ae93-0242ac130002
+        directMarketingAllowed:
+          type: boolean
+          example: false
+        consumerMobileNumber:
+          type: string
+          example: "00614000555666"
+        externalId:
+          type: string
+          description: Adatree's customer can supply an externalId when creating consents to associate with records in its own system
+          example: external-id-by-adatree-customer
+    AdrUpdateConsent:
+      type: object
+      properties:
+        externalId:
+          type: string
+          example: external-id-by-adatree-customer
+    UseCaseResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: HOME_LOAN
+        name:
+          type: string
+          example: Home Loan Assessment
+        description:
+          type: string
+          example: Data will be used to assess your eligibility for a home loan.
+        priority:
+          type: integer
+          format: int32
+          example: 1
+        historicalCollectionPeriodInDays:
+          type: integer
+          format: int32
+          example: 90
+        notificationType:
+          $ref: '#/components/schemas/NotificationType'
+        scopes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScopeResponse'
+        accessFrequency:
+          $ref: '#/components/schemas/AccessFrequency'
+        sharingDurations:
+          type: array
+          description: default to ["CUSTOM"] for Ongoing consent; default to ["ONCE_OFF"] for Once_off consent if not supplied
+          items:
+            $ref: '#/components/schemas/SharingDuration'
+    ResponseErrorList:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResponseErrorListErrors'
+    ResponseErrorListErrors:
+      required:
+        - code
+        - detail
+        - title
+      properties:
+        code:
+          type: string
+          description: 'Error code'
+          example: "0001"
+        title:
+          type: string
+          description: 'Title of invalid parameter or payload property'
+          example: "status"
+        detail:
+          type: string
+          description: 'detailed error message'
+          example: "invalid status"
+        meta:
+          type: object
+          description: Optional additional data for specific error types
+          properties: {}
+    ScopeResponse:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Bank account name, type and balance
+        id:
+          type: string
+          example: bank:accounts.basic:read
+        purpose:
+          type: string
+          example: "This will allow us to provide best of kind service"
+        description:
+          type: string
+          example: This will allow us to access basic information about your accounts
+        claims:
+          type: array
+          example: [ "Name of account", "Type of account", "Account balance"]
+          items:
+            type: string
+        priority:
+          type: integer
+          example: 1
+          format: int32
+    # enum
+    AccessFrequency:
+      type: string
+      example: ONCE_OFF
+      enum:
+        - ONCE_OFF
+        - ONGOING
+    NotificationType:
+      type: string
+      example: EMAIL
+      enum:
+        - EMAIL
+        - SMS
+    PostUsageAction:
+      type: string
+      example: DELETION
+      enum:
+        - DELETION
+        - DE_IDENTIFICATION
+    SharingDuration:
+      type: string
+      description: |
+        sharingDuration for Once_off consent can only be "ONCE_OFF" <br/>
+        sharingDuration for Ongoing consent could be one of predefined sharing durations or "CUSTOM" <br/>
+        "CUSTOM" (Ongoing consent) means a consumer is free to choose a sharingEndDate
+      example: ONE_YEAR
+      enum:
+        - ONE_DAY
+        - ONE_WEEK
+        - TWO_WEEKS
+        - ONE_MONTH
+        - THREE_MONTHS
+        - SIX_MONTHS
+        - NINE_MONTHS
+        - ONE_YEAR
+        - CUSTOM
+        - ONCE_OFF
+    Status:
+      type: string
+      example: ACTIVE
+      enum:
+        - REQUESTED
+        - ACTIVE
+        - EXPIRED
+        - REVOKED
+  #-------------------------------
+  # Reusable responses
+  #-------------------------------
+  responses:
+    401Unauthorised:
+      description: Unauthorised
+    403Forbidden:
+      description: Forbidden
+    404NotFound:
+      description: The specified resource was not found.
+    400BadRequest:
+      description: Request is invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorList'
+    429RateLimited:
+      description: Ratelimit reached
+    GenericError:
+      description: An error occurred.
+      content:
+        application/json:
+          schema:
+            type: string
+            example: something went wrong
+  #-------------------------------
+  # Reusable parameters
+  #-------------------------------
+  parameters:
+    ParamPage:
+      name: page
+      in: query
+      description: Page of results to request (standard pagination)
+      schema:
+        type: integer
+        format: int32
+        default: 1
+        minimum: 1
+        example: 1
+        x-cds-type: PositiveInteger
+    ParamPageSize:
+      name: page-size
+      in: query
+      description: Page size to request. Default is 25 (standard pagination)
+      schema:
+        type: integer
+        default: 25
+        minimum: 1
+        example: 25
+        x-cds-type: PositiveInteger
