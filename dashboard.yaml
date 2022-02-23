@@ -272,7 +272,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TokenCreatedResponse'
-  '/software-products/{softwareProductId}/data-holders':
+  '/dcr/software-products/{softwareProductId}/data-holders':
     get:
       description: Feature toggle is avaiable by request to enable anonymous access for this API endpoint
       security:
