@@ -187,6 +187,8 @@ paths:
         - bearerAuth: [ 'consumer:authorizations:write' ]
       tags:
         - Authorization
+      summary: Get Authorization Redirect URL
+      description: Get the authorization redirect URL to send the consumer to the data holder
       operationId: getAuthorization
       parameters:
         - name: nonce
@@ -255,6 +257,8 @@ paths:
                 type: string
   '/infosec/tokens':
     post:
+      summary: Create Tokens
+      description: Send the required parameters from the data holder to the ADR Platform backend to finish extablishing data access
       security:
         - bearerAuth: [ 'consumer:tokens:write' ]
       tags:
@@ -274,7 +278,8 @@ paths:
                 $ref: '#/components/schemas/TokenCreatedResponse'
   '/dcr/software-products/{softwareProductId}/data-holders':
     get:
-      description: Feature toggle is avaiable by request to enable anonymous access for this API endpoint
+      summary: Get Data Holders
+      description: Get the list of available data holders for a software product
       security:
         - bearerAuth: [ 'consumer:data-holders:read' ]
       tags:
