@@ -1,28 +1,31 @@
 openapi: 3.0.1
 info:
-  title: Adatree ADR Platform Consent API
-  description: A Consent API for ADRs. This allows ADRs to query for consents granted by their customers to access CDR consumer data. It also provides a mechanism to configure scopes and use-cases which are then made available in the consent dashboard.
+  title: Consent Dashboard API
+  description: 'Consent Dashboard REST API. This allows ADR / consumers to perform CDR consumer authorization flow with Data Holders'
   contact:
-    name: Adatree Pty Ltd
-    url: 'https://adatree.com.au'
+    name: Adatree
     email: engineering@adatree.com.au
-  version: '1.0.0'
+  version: '1.1.0'
 servers:
-  - url: https://cdr-insights-prod.api.adatree.com.au
+  - url: 'https://cdr-insights-prod.api.adatree.com.au'
+    description: Server url
 paths:
-  /adr/consents:
+  /consents:
     get:
       security:
-        - bearerAuth: ['adr:consents:read']
+        - bearerAuth: [ 'consumer:consents:read', 'consents:read' ]
+        - m2m: [ 'consents:read' ]
       tags:
-        - Consents
+        - Consent
       summary: Get Consents
-      description: Retrieve consent record
-      operationId: findConsents
+      description: Get all consent records for this consumer
+      operationId: findAllConsents
       parameters:
         - name: consumerId
           in: query
-          description: consumeId, please be kindly reminded of proper encoding as Id from some IDP could have special character like '|', which need be encoded as '%7c'
+          description: |
+            consumeId, please be kindly reminded of proper encoding as Id from some IDP could have special character like '|', which need be encoded as '%7c'. <br/>
+            consumerId should only be used with machine token, otherwise it will be deemed BAD_REQUEST
           example: auth0%7c5fbc585628421a006e83d95d
           required: false
           schema:
@@ -157,23 +160,55 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ConsentResponse'
-        400:
-          $ref: '#/components/responses/400BadRequest'
         401:
           $ref: '#/components/responses/401Unauthorised'
         403:
           $ref: '#/components/responses/403Forbidden'
         429:
           $ref: '#/components/responses/429RateLimited'
-  /adr/consents/{consentId}:
+    post:
+      security:
+        - bearerAuth: [ 'consumer:consents:write', 'consents:write' ]
+        - m2m: [ 'consents:write' ]
+      tags:
+        - Consent
+      summary: Create Consent
+      description: Create a consent record for consumer
+      operationId: createConsent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConsent'
+      responses:
+        200:
+          description: successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentResponse'
+        401:
+          $ref: '#/components/responses/401Unauthorised'
+        403:
+          $ref: '#/components/responses/403Forbidden'
+        422:
+          description: active consent exists for requested use case
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentResponse'
+        429:
+          $ref: '#/components/responses/429RateLimited'
+  /consents/{consentId}:
     get:
       security:
-        - bearerAuth: ['adr:consents:read']
+        - bearerAuth: [ 'consumer:consents:read', 'consents:read' ]
+        - m2m: [ 'consents:read' ]
       tags:
-        - Consents
+        - Consent
       summary: Get Consent
-      description: Retreive an individual consent record
-      operationId: getConsent
+      description: Retreive a single consent record for this consumer
+      operationId: findConsent
       parameters:
         - name: consentId
           in: path
@@ -198,12 +233,15 @@ paths:
           $ref: '#/components/responses/429RateLimited'
     patch:
       security:
-        - bearerAuth: [ 'adr:consents:write' ]
+        - bearerAuth: [ 'consumer:consents:write', 'consents:write' ]
+        - m2m: [ 'consents:write' ]
       tags:
-        - Consents
-      summary: Update Consent
-      description: update externalId of a consent
-      operationId: updateConsentAdr
+        - Consent
+      summary: Update a consent's via dashboard or back channel
+      description: |
+        <ul><li>Update postUsageAction, directMarketing option or sharing end date when a dashboard token is received</li><br/>
+        <li>Update externalId when a machine (backchannel) token is received</li></ul>
+      operationId: updateConsent
       parameters:
         - name: consentId
           in: path
@@ -215,7 +253,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AdrUpdateConsent'
+              oneOf:
+                - $ref: '#/components/schemas/UpdateConsentConsumer'
+                - $ref: '#/components/schemas/UpdateConsentMachine'
       responses:
         200:
           description: consent successfully updated
@@ -228,10 +268,13 @@ paths:
         429:
           $ref: '#/components/responses/429RateLimited'
     delete:
+      security:
+        - bearerAuth: [ 'consumer:consents:write', 'consents:write' ]
+        - m2m: [ 'consents:write' ]
       tags:
-        - Consents
+        - Consent
       summary: Revoke Consent
-      description: Allows Data Recipient to revoke a single consent record. This API is idempotent.
+      description: Revoke a single consent record for this consumer
       operationId: revokeConsent
       parameters:
         - name: consentId
@@ -251,10 +294,10 @@ paths:
           $ref: '#/components/responses/404NotFound'
         429:
           $ref: '#/components/responses/429RateLimited'
-  /adr/consents/{consentId}/history:
+  /consents/{consentId}/history:
     get:
       security:
-        - bearerAuth: ['adr:consents:read']
+        - m2m: ['consents:read']
       tags:
         - Consents
       summary: Get Consent History
@@ -282,44 +325,116 @@ paths:
           $ref: '#/components/responses/404NotFound'
         429:
           $ref: '#/components/responses/429RateLimited'
-  /consent-mgmt/consents/events:
+  /consents/{consentId}/authorization:
     get:
       security:
-        - bearerAuth: ['adr:consents:read']
+        - bearerAuth: [ 'consumer:consents:read', 'consents:read' ]
+        - m2m: [ 'consents:read' ]
       tags:
-        - Consent events
-      summary: Retrieve consent events
-      operationId: getConsentEvents
+        - Consent Authorization
+      summary: Get the authorization link for a Consent
+      description: Get the authorization link for a Consent
+      operationId: getAuthorizationForConsent
       parameters:
-        - name: oldest
-          description: Constrain the consent event result list with timestamp at or after this date/time. Format is aligned to DateTimeString common type
+        - name: consentId
+          in: path
+          required: true
+          example: 148c9187-e52b-431f-9b24-7225e75ca2be
+          schema:
+            type: string
+        - name: state
+          description: A state is generated by the consent user-agent (browser) and is used to bind the redirection response from a Data Holder with a user session as per https://openid.net/specs/openid-financial-api-part-1-1_0-final.html#public-client. It is sent in the authentication request, and is then also included redirect from the ADH to the ADR. This allows the ADR client application prevent CSRF attacks. Must be unique per authorization request.
           in: query
           required: false
           schema:
             type: string
-            format: date-time
-            x-cds-type: DateTimeString
-            example: "2022-02-06T08:17:26Z"
-        - name: newest
-          description: Constrain the consent event result list with timestamp at or before this date/time. Format is aligned to DateTimeString common type
+        - name: redirectUri
+          description: The URI to redirect to from the data holder when the consumer has finished data holder authentication. Must be from the list of redirect URIs configured at the ACCC register.
           in: query
           required: false
           schema:
             type: string
-            format: date-time
-            x-cds-type: DateTimeString
-            example: "2022-02-01T15:43:00.121Z"
-        - $ref: '#/components/parameters/ParamPage'
-        - $ref: '#/components/parameters/ParamPageSize'
       responses:
         200:
-          description: list of ConsentEvent with pagination
+          description: authorization link
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConsentEventList'
-        400:
-          $ref: '#/components/responses/400BadRequest'
+                $ref: '#/components/schemas/ConsentAuthorization'
+        401:
+          $ref: '#/components/responses/401Unauthorised'
+        403:
+          $ref: '#/components/responses/403Forbidden'
+        404:
+          $ref: '#/components/responses/404NotFound'
+        429:
+          $ref: '#/components/responses/429RateLimited'
+  '/software-products/{softwareProductId}/data-holders':
+    get:
+      security:
+        - bearerAuth: [ 'consumer:data-holders:read', 'data-holders:read' ]
+        - m2m: ['data-holders:read']
+      tags:
+        - Data Holders
+      operationId: get data holders of a software product
+      parameters:
+        - name: softwareProductId
+          description: |
+            The identifier of the software product registered at the ACCC registry. <br/>
+            The list of data holders returned is the list where dynamic client reigstration has been peformed at each data holder for this software product. <br/>
+            The list of data holders for a use case can be restricted by management API at Use Case or Software Product level
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DataHolder'
+  /tokens:
+    post:
+      security:
+        - bearerAuth: [ 'consumer:tokens:write', 'consumer_tokens_write', 'tokens:write', 'tokens_write' ]
+        - m2m: [ 'tokens:write' ]
+      tags:
+        - Tokens
+      operationId: persistToken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Authorization'
+      responses:
+        '200':
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenCreatedResponse'
+  /use-cases:
+    get:
+      security:
+        - bearerAuth: [ 'consumer:use-cases:read', 'use-cases:read' ]
+        - m2m: [ 'use-cases:read' ]
+      tags:
+        - UseCase
+      summary: Get Use-cases
+      description: Get all use-cases that have been configured. A use case is your reason for requesting consent from a consumer e.g. a home loan assessment, a budgeting app.
+      operationId: findAllUseCases
+      responses:
+        200:
+          description: successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UseCaseResponse'
         401:
           $ref: '#/components/responses/401Unauthorised'
         403:
@@ -332,124 +447,163 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-
+    m2m:
+      type: oauth2
+      description: Machine to machine OAuth2 to access infosec token service
+      flows:
+        clientCredentials:
+          tokenUrl: https://adatree-nonprod-adr.auth.ap-southeast-2.amazoncognito.com/oauth2/token
+          scopes:
+            'authorizations:write': allow ADR to create a Authorisation Request for a consumer
+            'tokens:write': allow ADR to create or update Authorisation Request
   schemas:
-    ConsentEventData:
-      properties:
-        events:
-          type: array
-          items:
-            $ref: '#/components/schemas/ConsentEvent'
-    ConsentEvent:
+    Authorization:
       type: object
-      required: [eventType, timestamp, cdrArrangementId, consumerId, consentId, postUsageAction]
       properties:
-        eventId:
+        code:
           type: string
-          description: a UUID of the event that could be used for idempotent event processing
-          example: 32dd2e21-e7c8-44b1-b379-39e2ccd7a097
-        eventType:
+          description: Authorization code returned from the data holder that will be used as part of token request validation.
+        state:
           type: string
-          description: |
-            This identifies the different types of events through a consent's lifecycle. <br/>
-            A consent becomes GRANTED after consumer consent with Data Holder<br/>
-            it can be revoked by a consumer via ADR or Data Holder<br/>
-            an ongoing consent will expire on (if it is not revoked prior to) sharing end date
-            a once_off consent will expire within 24 hours after the consent is GRANTED
-          enum: [GRANTED, REVOKED, EXPIRED]
-        timestamp:
+          description: The state is a parameter returned by the data holder that is used to prevent CSRF attacks. Must be unique per authorization request.
+        id_token:
           type: string
-          format: date-time
-          x-cds-type: DateTimeString
-          example: "2022-01-20T15:00:00.999Z"
-        cdrArrangementId:
+          description: ID Token value associated with the authenticated session that is returned from the data holder.
+    TokenCreatedResponse:
+      type: object
+      properties:
+        activeConsentId:
           type: string
-          example: 854d862c-5466-11eb-ae93-0242ac130002
-        consentId:
+          description: Identifier of the consent which has now been activated by the completion of the Authorization flow.
+    UseCaseDataHolder:
+      required:
+        - dataHolderBrandId
+        - brandName
+        - logoUri
+      type: object
+      properties:
+        dataHolderBrandId:
           type: string
-          example: 148c9187-e52b-431f-9b24-7225e75ca2be
-        consumerId:
+          description: The identifier of the data holder you wish the consumer to authenticate with.
+          example: 7ff47a14-28bd-4b04-b216-67b367713a38
+        brandName:
           type: string
-          example: abedfaas-asdfsf-4asdf-1465-sfsadf3413
+          description: The brand name of the data holder you wish the consumer to authenticate with.
+          example: Westpac
+        logoUri:
+          type: string
+          description: The logo URI of the data holder you wish the consumer to authenticate with.
+          example: https://www.westpac.com.au/logo
+    DataHolder:
+      required:
+        - brandName
+        - dataHolderBrandId
+        - logoUri
+      type: object
+      properties:
+        dataHolderBrandId:
+          type: string
+          description: The ideintifier of the data holder you wish the consumer to authenitcate with.
+          example: 7ff47a14-28bd-4b04-b216-67b367713a38
+        brandName:
+          type: string
+          description: The brand name of the data holder you wish the consumer to authenitcate with.
+          example: Westpac
+        logoUri:
+          type: string
+          description: The logo URI of the data holder you wish the consumer to authenitcate with.
+          example: https://www.westpac.com.au/logo
+        sector:
+          type: string
+          example: banking
+        scopesSupported:
+          type: array
+          example: ["bank:accounts.basic:read", "bank:accounts.detail:read", "bank:transactions:read", "bank:payees:read", "bank:regular_payments:read", "common:customer.basic:read", "common:customer.detail:read"]
+          description: a list of Authorisation Scopes supported by data holder
+          items:
+            type: string
+        meta:
+          $ref: '#/components/schemas/MetaBanking'
+    MetaBanking:
+      type: object
+      properties:
+        bsbPrefix:
+          type: array
+          description: DEPRECATED. a list of bsb prefixes for a data-holder
+          items:
+            type: string
+            description: first two or three digits that specify the financial institution.
+    RevokeConsent:
+      type: object
+      properties:
+        revokingParty:
+          type: string
+          enum:
+            - DATA_HOLDER
+            - DATA_RECIPIENT
+    UpdateConsentConsumer:
+      type: object
+      properties:
         postUsageAction:
           $ref: '#/components/schemas/PostUsageAction'
+        directMarketingAllowed:
+          type: boolean
+          example: true
+        sharingEndDate:
+          type: string
+          description: new sharing end date, will be rounded to the end of specified date and validated against sharing duration options defined in chosen Use Case
+          format: date
+          x-cds-type: DateString
+          example: "1997-01-12"
+    UpdateConsentMachine:
+      type: object
+      properties:
         externalId:
           type: string
           example: external-id-by-adatree-customer
-        sharingEndDate:
-          type: string
-          format: date-time
+    CreateConsent:
+      type: object
+      properties:
         consumerEmail:
           type: string
           example: "consumer@example.com"
+        sharingEndDate:
+          type: string
+          description: sharing end date, will be rounded to the end of specified date and validated against sharing duration options defined in chosen Use Case
+          format: date
+          example: "1997-01-12"
+          x-cds-type: DateString
+        dataHolderBrandId:
+          type: string
+          example: 55b3299a-3e50-48a2-a190-cca263ccaba5
+        useCaseId:
+          type: string
+          example: HOME_LOAN
+        postUsageAction:
+          $ref: '#/components/schemas/PostUsageAction'
+        directMarketingAllowed:
+          type: boolean
+          example: false
         consumerMobileNumber:
           type: string
           example: "00614000555666"
-    ConsentEventList:
+        externalId:
+          type: string
+          description: Adatree's customer can supply an externalId when creating consents to associate with records in its own system
+          example: external-id-by-adatree-customer
+        consumerId:
+          type: string
+          description: |
+            consumeId, please be kindly reminded of proper encoding as Id from some IDP could have special character like '|', which need be encoded as '%7c'. <br/>
+            consumerId is only accepted for backchannel consent creation
+          example: auth0%7c5fbc585628421a006e83d95d
+    ConsentAuthorization:
       type: object
-      required:
-        - data
-        - links
-        - meta
+      description: Authorization link for a Consent
       properties:
-        data:
-          $ref: '#/components/schemas/ConsentEventData'
-        links:
-          $ref: '#/components/schemas/LinksPaginated'
-        meta:
-          $ref: '#/components/schemas/MetaPaginated'
-    LinksPaginated:
-      type: object
-      required:
-        - self
-      properties:
-        self:
+        uri:
+          example: https://id.rab.sandbox.adatree.com.au/identity/authorization?response_type=code+id_token&client_id=abcdefg&request_uri=urn%3Aietf%3Aparams%3Aoauth%3Arequest_uri%3A-asdfasdfuhlkjshdf_akjsldflasjd&scope=openid+bank%3Aaccounts.basic%3Aread+bank%3Aaccounts.detail%3Aread+bank%3Atransactions%3Aread+common%3Acustomer.basic%3Aread
           type: string
-          description: Fully qualified link that generated the current response document.
-            https://self.example.com.au will be converted to https://self.example.com.au?page=1&page-size=25
-          example: https://self.example.com.au?page=3&page-size=25
-          x-cds-type: URIString
-        first:
-          type: string
-          description: URI to the first page of this set. Mandatory if this response is not the first page
-          example: https://self.example.com.au?page=1&page-size=25
-          x-cds-type: URIString
-        prev:
-          type: string
-          description: URI to the previous page of this set. Mandatory if this response is not the first page
-          example: https://self.example.com.au?page=2&page-size=25
-          x-cds-type: URIString
-        next:
-          type: string
-          description: URI to the next page of this set. Mandatory if this response is not the last page
-          example: https://self.example.com.au?page=4&page-size=25
-          x-cds-type: URIString
-        last:
-          type: string
-          description: URI to the last page of this set. Mandatory if this response is not the last page
-          example: https://self.example.com.au?page=15&page-size=25
-          x-cds-type: URIString
-      x-conditional:
-        - prev
-        - next
-        - first
-        - last
-    MetaPaginated:
-      type: object
-      required:
-        - totalPages
-        - totalRecords
-      properties:
-        totalPages:
-          type: integer
-          description: The total number of pages in the full set.
-          example: 4
-          x-cds-type: NaturalNumber
-        totalRecords:
-          type: integer
-          description: The total number of records in the full set.
-          example: 95
-          x-cds-type: NaturalNumber
     ConsentHistoryResponse:
       type: object
       properties:
@@ -523,12 +677,30 @@ components:
           type: string
           description: Adatree's customer can supply an externalId when creating consents to associate with records in its own system
           example: external-id-by-adatree-customer
-    AdrUpdateConsent:
+    ScopeResponse:
       type: object
       properties:
-        externalId:
+        name:
           type: string
-          example: external-id-by-adatree-customer
+          example: Bank account name, type and balance
+        id:
+          type: string
+          example: bank:accounts.basic:read
+        purpose:
+          type: string
+          example: "This will allow us to provide best of kind service"
+        description:
+          type: string
+          example: This will allow us to access basic information about your accounts
+        claims:
+          type: array
+          example: [ "Name of account", "Type of account", "Account balance"]
+          items:
+            type: string
+        priority:
+          type: integer
+          example: 1
+          format: int32
     UseCaseResponse:
       type: object
       properties:
@@ -538,6 +710,9 @@ components:
         name:
           type: string
           example: Home Loan Assessment
+        softwareProductId:
+          type: string
+          example: software product id
         description:
           type: string
           example: Data will be used to assess your eligibility for a home loan.
@@ -562,6 +737,11 @@ components:
           description: default to ["CUSTOM"] for Ongoing consent; default to ["ONCE_OFF"] for Once_off consent if not supplied
           items:
             $ref: '#/components/schemas/SharingDuration'
+        dataHolders:
+          description: list of data holders, can be configured via management API
+          type: array
+          items:
+            $ref: '#/components/schemas/UseCaseDataHolder'
     ResponseErrorList:
       type: object
       required:
@@ -593,30 +773,6 @@ components:
           type: object
           description: Optional additional data for specific error types
           properties: {}
-    ScopeResponse:
-      type: object
-      properties:
-        name:
-          type: string
-          example: Bank account name, type and balance
-        id:
-          type: string
-          example: bank:accounts.basic:read
-        purpose:
-          type: string
-          example: "This will allow us to provide best of kind service"
-        description:
-          type: string
-          example: This will allow us to access basic information about your accounts
-        claims:
-          type: array
-          example: [ "Name of account", "Type of account", "Account balance"]
-          items:
-            type: string
-        priority:
-          type: integer
-          example: 1
-          format: int32
     # enum
     AccessFrequency:
       type: string
@@ -636,6 +792,14 @@ components:
       enum:
         - DELETION
         - DE_IDENTIFICATION
+    Status:
+      type: string
+      example: ACTIVE
+      enum:
+        - REQUESTED
+        - ACTIVE
+        - EXPIRED
+        - REVOKED
     SharingDuration:
       type: string
       description: |
@@ -654,14 +818,6 @@ components:
         - ONE_YEAR
         - CUSTOM
         - ONCE_OFF
-    Status:
-      type: string
-      example: ACTIVE
-      enum:
-        - REQUESTED
-        - ACTIVE
-        - EXPIRED
-        - REVOKED
   #-------------------------------
   # Reusable responses
   #-------------------------------
@@ -687,28 +843,3 @@ components:
           schema:
             type: string
             example: something went wrong
-  #-------------------------------
-  # Reusable parameters
-  #-------------------------------
-  parameters:
-    ParamPage:
-      name: page
-      in: query
-      description: Page of results to request (standard pagination)
-      schema:
-        type: integer
-        format: int32
-        default: 1
-        minimum: 1
-        example: 1
-        x-cds-type: PositiveInteger
-    ParamPageSize:
-      name: page-size
-      in: query
-      description: Page size to request. Default is 25 (standard pagination)
-      schema:
-        type: integer
-        default: 25
-        minimum: 1
-        example: 25
-        x-cds-type: PositiveInteger
