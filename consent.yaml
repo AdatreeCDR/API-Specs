@@ -1,6 +1,6 @@
 openapi: 3.0.1
 info:
-  title: Consent Dashboard API
+  title: Adatree ADR Platform Consent API
   description: 'Consent Dashboard REST API. This allows ADR / consumers to perform CDR consumer authorization flow with Data Holders'
   contact:
     name: Adatree
