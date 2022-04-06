@@ -327,13 +327,13 @@ paths:
           $ref: '#/components/responses/429RateLimited'
   /consents/{consentId}/authorization:
     get:
+      summary: Get Authorization Redirect URL for a Consent
+      description: Get the authorization redirect URL to send the consumer to the data holder    
       security:
         - bearerAuth: [ 'consumer:consents:read', 'consents:read' ]
         - m2m: [ 'consents:read' ]
       tags:
         - Consent Authorization
-      summary: Get the authorization link for a Consent
-      description: Get the authorization link for a Consent
       operationId: getAuthorizationForConsent
       parameters:
         - name: consentId
@@ -371,6 +371,8 @@ paths:
           $ref: '#/components/responses/429RateLimited'
   '/software-products/{softwareProductId}/data-holders':
     get:
+      summary: Get Data Holders    
+      description: Get the list of available data holders for a software product
       security:
         - bearerAuth: [ 'consumer:data-holders:read', 'data-holders:read' ]
         - m2m: ['data-holders:read']
@@ -398,6 +400,8 @@ paths:
                   $ref: '#/components/schemas/DataHolder'
   /tokens:
     post:
+      summary: Create Tokens    
+      description: Send the required parameters from the data holder to the ADR Platform backend to finish extablishing data access    
       security:
         - bearerAuth: [ 'consumer:tokens:write', 'consumer_tokens_write', 'tokens:write', 'tokens_write' ]
         - m2m: [ 'tokens:write' ]
