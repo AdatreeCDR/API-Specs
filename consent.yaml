@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: Adatree ADR Platform Consent API
-  description: 'Consent Dashboard REST API. This allows ADR / consumers to perform CDR consumer authorization flow with Data Holders'
+  description: 'Consent Dashboard REST APIs. This allows ADR / consumers to perform CDR consumer authorization flow with Data Holders'
   contact:
     name: Adatree
     email: engineering@adatree.com.au
@@ -328,7 +328,7 @@ paths:
   /consents/{consentId}/authorization:
     get:
       summary: Get Authorization Redirect URL for a Consent
-      description: Get the authorization redirect URL to send the consumer to the data holder    
+      description: Get the authorization redirect URL to send the consumer to the data holder
       security:
         - bearerAuth: [ 'consumer:consents:read', 'consents:read' ]
         - m2m: [ 'consents:read' ]
@@ -369,7 +369,51 @@ paths:
           $ref: '#/components/responses/404NotFound'
         429:
           $ref: '#/components/responses/429RateLimited'
-  '/software-products/{softwareProductId}/data-holders':
+  /consents/events:
+    get:
+      security:
+        - m2m: ['consents:read']
+      tags:
+        - Get consent events
+      summary: Retrieve consent events
+      operationId: getConsentEvents
+      parameters:
+        - name: oldest
+          description: Constrain the consent event result list with timestamp at or after this date/time. Format is aligned to DateTimeString common type
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            x-cds-type: DateTimeString
+            example: "2022-02-06T08:17:26Z"
+        - name: newest
+          description: Constrain the consent event result list with timestamp at or before this date/time. Format is aligned to DateTimeString common type
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            x-cds-type: DateTimeString
+            example: "2022-02-01T15:43:00.121Z"
+        - $ref: '#/components/parameters/ParamPage'
+        - $ref: '#/components/parameters/ParamPageSize'
+      responses:
+        200:
+          description: list of ConsentEvent with pagination
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentEventList'
+        400:
+          $ref: '#/components/responses/400BadRequest'
+        401:
+          $ref: '#/components/responses/401Unauthorised'
+        403:
+          $ref: '#/components/responses/403Forbidden'
+        429:
+          $ref: '#/components/responses/429RateLimited'          
+  /software-products/{softwareProductId}/data-holders:
     get:
       summary: Get Data Holders    
       description: Get the list of available data holders for a software product
@@ -537,14 +581,6 @@ components:
           items:
             type: string
             description: first two or three digits that specify the financial institution.
-    RevokeConsent:
-      type: object
-      properties:
-        revokingParty:
-          type: string
-          enum:
-            - DATA_HOLDER
-            - DATA_RECIPIENT
     UpdateConsentConsumer:
       type: object
       properties:
@@ -705,6 +741,122 @@ components:
           type: integer
           example: 1
           format: int32
+    ConsentEventData:
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConsentEvent'
+    ConsentEvent:
+      type: object
+      required: [eventType, timestamp, cdrArrangementId, consumerId, consentId, postUsageAction]
+      properties:
+        eventId:
+          type: string
+          description: a UUID of the event that could be used for idempotent event processing
+          example: 32dd2e21-e7c8-44b1-b379-39e2ccd7a097
+        eventType:
+          type: string
+          description: |
+            This identifies the different types of events through a consent's lifecycle. <br/>
+            A consent becomes GRANTED after consumer consent with Data Holder<br/>
+            it can be revoked by a consumer via ADR or Data Holder<br/>
+            an ongoing consent will expire on (if it is not revoked prior to) sharing end date
+            a once_off consent will expire within 24 hours after the consent is GRANTED
+          enum: [GRANTED, REVOKED, EXPIRED]
+        timestamp:
+          type: string
+          format: date-time
+          x-cds-type: DateTimeString
+          example: "2022-01-20T15:00:00.999Z"
+        cdrArrangementId:
+          type: string
+          example: 854d862c-5466-11eb-ae93-0242ac130002
+        consentId:
+          type: string
+          example: 148c9187-e52b-431f-9b24-7225e75ca2be
+        consumerId:
+          type: string
+          example: abedfaas-asdfsf-4asdf-1465-sfsadf3413
+        postUsageAction:
+          $ref: '#/components/schemas/PostUsageAction'
+        externalId:
+          type: string
+          example: external-id-by-adatree-customer
+        sharingEndDate:
+          type: string
+          format: date-time
+        consumerEmail:
+          type: string
+          example: "consumer@example.com"
+        consumerMobileNumber:
+          type: string
+          example: "00614000555666"
+    LinksPaginated:
+      type: object
+      required:
+        - self
+      properties:
+        self:
+          type: string
+          description: Fully qualified link that generated the current response document.
+            https://self.example.com.au will be converted to https://self.example.com.au?page=1&page-size=25
+          example: https://self.example.com.au?page=3&page-size=25
+          x-cds-type: URIString
+        first:
+          type: string
+          description: URI to the first page of this set. Mandatory if this response is not the first page
+          example: https://self.example.com.au?page=1&page-size=25
+          x-cds-type: URIString
+        prev:
+          type: string
+          description: URI to the previous page of this set. Mandatory if this response is not the first page
+          example: https://self.example.com.au?page=2&page-size=25
+          x-cds-type: URIString
+        next:
+          type: string
+          description: URI to the next page of this set. Mandatory if this response is not the last page
+          example: https://self.example.com.au?page=4&page-size=25
+          x-cds-type: URIString
+        last:
+          type: string
+          description: URI to the last page of this set. Mandatory if this response is not the last page
+          example: https://self.example.com.au?page=15&page-size=25
+          x-cds-type: URIString
+      x-conditional:
+        - prev
+        - next
+        - first
+        - last
+    MetaPaginated:
+      type: object
+      required:
+        - totalPages
+        - totalRecords
+      properties:
+        totalPages:
+          type: integer
+          description: The total number of pages in the full set.
+          example: 4
+          x-cds-type: NaturalNumber
+        totalRecords:
+          type: integer
+          description: The total number of records in the full set.
+          example: 95
+          x-cds-type: NaturalNumber
+    ConsentEventList:
+      type: object
+      required:
+        - data
+        - links
+        - meta
+      properties:
+        data:
+          $ref: '#/components/schemas/ConsentEventData'
+        links:
+          $ref: '#/components/schemas/LinksPaginated'
+        meta:
+          $ref: '#/components/schemas/MetaPaginated'  
     UseCaseResponse:
       type: object
       properties:
@@ -847,3 +999,28 @@ components:
           schema:
             type: string
             example: something went wrong
+  #-------------------------------
+  # Reusable parameters
+  #-------------------------------
+  parameters:
+    ParamPage:
+      name: page
+      in: query
+      description: Page of results to request (standard pagination)
+      schema:
+        type: integer
+        format: int32
+        default: 1
+        minimum: 1
+        example: 1
+        x-cds-type: PositiveInteger
+    ParamPageSize:
+      name: page-size
+      in: query
+      description: Page size to request. Default is 25 (standard pagination)
+      schema:
+        type: integer
+        default: 25
+        minimum: 1
+        example: 25
+        x-cds-type: PositiveInteger            
