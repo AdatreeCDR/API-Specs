@@ -10,11 +10,12 @@ info:
   version: "0.0.1"
 servers:
   - url: https://cdr-insights-prod.api.adatree.com.au/data
-security:
-  - bearerAuth: [ 'data:banking:read' ]
 paths:
   /banking/transactions:
     get:
+      security:
+        - bearerAuth: [ 'data:banking:transactions:read' ]
+        - m2m: [ 'data:banking:transactions:read' ]
       tags:
         - Transactions
       summary: Get Transactions Per Use Case
