@@ -1,0 +1,430 @@
+openapi: 3.0.1
+info:
+  title: Adatree ADR Platform Data API
+  description: |-
+    Adatree's Accredited Data Recipient (ADR) Platform Data API definition.
+  contact:
+    name: Adatree Pty Ltd
+    url: https://adatree.com.au
+    email: engineering@adatree.com.au
+  version: "0.0.1"
+servers:
+  - url: https://cdr-insights-prod.api.adatree.com.au/data
+security:
+  - bearerAuth: [ 'data:banking:read' ]
+paths:
+  /banking/transactions:
+    get:
+      tags:
+        - Transactions
+      summary: Get Transactions Per Use Case
+      description: |-
+        Obtain transactions with .operationId: getTransanctions
+      operationId: getTransanctions
+      parameters:
+        - $ref: '#/components/parameters/ParamUseCase'
+        - $ref: '#/components/parameters/ParamTransactionOldestRetrievalTime'
+        - $ref: '#/components/parameters/ParamTransactionNewestRetrievalTime'
+        - $ref: '#/components/parameters/ParamTransactionOldestTime'
+        - $ref: '#/components/parameters/ParamTransactionNewestTime'
+        - $ref: '#/components/parameters/ParamPage'
+        - $ref: '#/components/parameters/ParamPageSize'
+      responses:
+        200:
+          description: Success
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ResponseTransactionList'
+        400:
+          $ref: '#/components/responses/400BadRequest'
+        401:
+          $ref: '#/components/responses/401Unauthorised'
+        403:
+          $ref: '#/components/responses/403Forbidden'
+        429:
+          $ref: '#/components/responses/429RateLimited'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ResponseTransactionList:
+      type: object
+      required:
+        - data
+        - links
+        - meta
+      properties:
+        data:
+          $ref: '#/components/schemas/ResponseTransactionList_data'
+        links:
+          $ref: '#/components/schemas/LinksPaginated'
+        meta:
+          $ref: '#/components/schemas/MetaPaginated'
+    LinksPaginated:
+      type: object
+      required:
+        - self
+      properties:
+        self:
+          type: string
+          description: Fully qualified link that generated the current response document.
+            https://self.example.com.au will be converted to https://self.example.com.au?page=1&page-size=25
+          example: https://self.example.com.au?page=3&page-size=25
+        first:
+          type: string
+          description: URI to the first page of this set. Mandatory if this response is not the first page
+          example: https://self.example.com.au?page=1&page-size=25
+        prev:
+          type: string
+          description: URI to the previous page of this set. Mandatory if this response is not the first page
+          example: https://self.example.com.au?page=2&page-size=25
+        next:
+          type: string
+          description: URI to the next page of this set. Mandatory if this response is not the last page
+          example: https://self.example.com.au?page=4&page-size=25
+        last:
+          type: string
+          description: URI to the last page of this set. Mandatory if this response is not the last page
+          example: https://self.example.com.au?page=15&page-size=25
+      x-conditional:
+        - prev
+        - next
+        - first
+        - last
+    MetaPaginated:
+      type: object
+      required:
+        - totalPages
+        - totalRecords
+      properties:
+        totalRecords:
+          type: integer
+          description: The total number of records in the full set. See [pagination](#pagination).
+          example: 581
+        totalPages:
+          type: integer
+          description: The total number of pages in the full set. See [pagination](#pagination).
+          example: 24
+    ResponseErrorList:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResponseErrorList_errors'
+    ResponseTransactionList_data:
+      required:
+        - transactions
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+    ResponseErrorList_errors:
+      required:
+        - code
+        - detail
+        - title
+      properties:
+        code:
+          type: string
+          description: 'Error code'
+          example: "0001"
+        title:
+          type: string
+          description: 'Title of invalid parameter or payload property '
+          example: "Invalid account id"
+        detail:
+          type: string
+          description: ID of the account not found
+          example: "invalid format for account id"
+        meta:
+          type: object
+          description: Optional additional data for specific error types
+          properties: {}
+    Transaction:
+      type: object
+      required:
+        - accountId
+        - amount
+        - description
+        - isDetailAvailable
+        - reference
+        - status
+        - type
+      properties:
+        accountId:
+          type: string
+          example: f632041c-d7c8-4679-a165-aa406cd62b13
+          description: ID of the account for which transactions are provided
+          x-cds-type: ASCIIString
+        transactionId:
+          type: string
+          example: f111111-d7c8-4679-a165-aa406cd62b13
+          description: A unique ID of the transaction adhering to the standards for ID permanence.  This is mandatory (through hashing if necessary) unless there are specific and justifiable technical reasons why a transaction cannot be uniquely identified for a particular account type
+          x-cds-type: ASCIIString
+        isDetailAvailable:
+          type: boolean
+          example: true
+          description: True if extended information is available using the transaction detail end point. False if extended data is not available
+          x-cds-type: Boolean
+        type:
+          type: string
+          example: FEE
+          description: The type of the transaction
+          enum:
+            - DIRECT_DEBIT
+            - FEE
+            - INTEREST_CHARGED
+            - INTEREST_PAID
+            - PAYMENT
+            - TRANSFER_OUTGOING
+            - TRANSFER_INCOMING
+            - OTHER
+        status:
+          type: string
+          example: POSTED
+          description: Status of the transaction whether pending or posted. Note that there is currently no provision in the standards to guarantee the ability to correlate a pending transaction with an associated posted transaction
+          enum:
+            - PENDING
+            - POSTED
+        description:
+          example: banking fee
+          type: string
+          description: The transaction description as applied by the financial institution
+        postingDateTime:
+          type: string
+          example: "2021-01-12T15:43:00.121Z"
+          description: The time the transaction was posted. This field is Mandatory if the transaction has status POSTED.  This is the time that appears on a standard statement.
+            DateTimeString can be found at https://consumerdatastandardsaustralia.github.io/standards/#common-field-types
+          x-cds-type: DateTimeString
+        valueDateTime:
+          type: string
+          example: "2021-01-12T15:43:00.121Z"
+          description: Date and time at which assets become available to the account owner in case of a credit entry, or cease to be available to the account owner in case of a debit transaction entry
+          x-cds-type: DateTimeString
+        executionDateTime:
+          type: string
+          example: "2021-01-12T15:43:00.121Z"
+          description: The time the transaction was executed by the originating customer, if available
+          x-cds-type: DateTimeString
+        amount:
+          type: string
+          example: 100.00
+          description: The value of the transaction. Negative values mean money was outgoing from the account
+          x-cds-type: AmountString
+        currency:
+          type: string
+          example: AUD
+          description: The currency for the transaction amount. AUD assumed if not present
+          x-cds-type: CurrencyString
+        reference:
+          type: string
+          example: overdraw
+          description: The reference for the transaction provided by the originating institution. Empty string if no data provided
+        merchantName:
+          type: string
+          example: McDonald
+          description: Name of the merchant for an outgoing payment to a merchant
+        merchantCategoryCode:
+          type: string
+          example: RANDOM
+          description: The merchant category code (or MCC) for an outgoing payment to a merchant
+        billerCode:
+          type: string
+          example: 234213427384923
+          description: BPAY Biller Code for the transaction (if available)
+        billerName:
+          type: string
+          example: test biller
+          description: Name of the BPAY biller for the transaction (if available)
+        crn:
+          type: string
+          example: 1234asdf1
+          description: BPAY CRN for the transaction (if available)
+        apcaNumber:
+          type: string
+          example: 111111
+          description: 6 Digit APCA number for the initiating institution. The field is fixed-width and padded with leading zeros if applicable.
+        extendedData:
+          $ref: '#/components/schemas/Transaction_extendedData'
+        adatree:
+          $ref: '#/components/schemas/Transaction_adatree'
+      x-conditional:
+        - transactionId
+        - postingDateTime
+    Transaction_extendedData_x2p101Payload:
+      required:
+        - extendedDescription
+      properties:
+        extendedDescription:
+          type: string
+          description: An extended string description. Only present if specified by the extensionUType field
+          example: extended descirption of a transaction
+        endToEndId:
+          type: string
+          description: An end to end ID for the payment created at initiation
+          example: end-to-endid-for-payment
+        purposeCode:
+          type: string
+          description: Purpose of the payment.  Format is defined by NPP standards for the x2p1.01 overlay service
+          example: payment-purpose-npp
+    Transaction_extendedData:
+      required:
+        - service
+      properties:
+        payer:
+          type: string
+          description: Label of the originating payer. Mandatory for inbound payment
+          example: Jane Doe
+        payee:
+          type: string
+          description: Label of the target PayID.  Mandatory for an outbound payment. The name assigned to the BSB/Account Number or PayID (by the owner of the PayID)
+          example: John Doe
+        extensionUType:
+          type: string
+          description: Optional extended data provided specific to transaction originated via NPP
+          example: x2p101Payload
+          enum:
+            - x2p101Payload
+        x2p101Payload:
+          $ref: '#/components/schemas/Transaction_extendedData_x2p101Payload'
+        service:
+          type: string
+          description: 'Identifier of the applicable overlay service. Valid values are: X2P1.01'
+          example: X2P1.01
+          enum:
+            - X2P1.01
+    Transaction_adatree:
+      required:
+        - resourceId
+        - cdrArrangementId
+        - dataHolderBrandId
+      properties:
+        resourceId:
+          type: string
+          example: f632041c-d7c8-4679-a165-aa406cd62b13
+          description: resource ID generated by Adatree; the ADHs do not always provide a transaction Id so we generate an id to uniquely identify a transaction
+        cdrArrangementId:
+          type: string
+          example: f111111-d7c8-4679-a165-aa406cd62b13
+          description: ID of the cdr arrangement for which transactions are provided
+        dataHolderBrandId:
+          type: string
+          example: 55b3299a-3e50-48a2-a190-cca263ccaba5
+          description: Id of data holder brand
+        categorisation:
+          $ref: '#/components/schemas/Transaction_adatree_categorisation'
+    Transaction_adatree_categorisation:
+      properties:
+        personetics:
+          $ref: '#/components/schemas/Transaction_adatree_personetics'
+    Transaction_adatree_personetics:
+      required:
+        - categoryName
+        - subcategoryName
+      properties:
+        categoryName:
+          type: string
+        subCategoryName:
+          type: string
+  #-------------------------------
+  # Reusable parameters
+  #-------------------------------
+  parameters:
+    ParamPage:
+      name: page
+      in: query
+      description: Page of results to request (standard pagination)
+      schema:
+        type: integer
+        format: int32
+        default: 1
+        minimum: 1
+        example: 1
+    ParamPageSize:
+      name: page-size
+      in: query
+      description: Page size to request. Default is 25 (standard pagination)
+      schema:
+        type: integer
+        default: 25
+        minimum: 1
+        example: 25
+    ParamUseCase:
+      name: use-case-id
+      in: query
+      required: true
+      description: Use case for which the transactions are being queried
+      schema:
+        type: string
+        example: "HOME_LOAN"
+    ParamTransactionOldestRetrievalTime:
+      name: oldest-retrieval-time
+      in: query
+      description: Constrain the transaction history request to transactions with retrieval time at or after this date/time. If absent defaults newest time minus 90 days. Format
+        is aligned to DateTimeString common type.
+      schema:
+        type: string
+        x-cds-type: DateTimeString
+      x-cds-type: DateTimeString
+    ParamTransactionNewestRetrievalTime:
+      name: newest-retrieval-time
+      in: query
+      description: Constrain the transaction history request to transactions with retrieval time at or before this date/time. If absent defaults to now. Format
+        is aligned to DateTimeString common type.
+      schema:
+        type: string
+        x-cds-type: DateTimeString
+      x-cds-type: DateTimeString
+    ParamTransactionNewestTime:
+      name: newest-time
+      in: query
+      description: Constrain the transaction history request to transactions with
+        effective time at or before this date/time.  If absent defaults to today.  Format
+        is aligned to DateTimeString common type
+      schema:
+        type: string
+        x-cds-type: DateTimeString
+      x-cds-type: DateTimeString
+    ParamTransactionOldestTime:
+      name: oldest-time
+      in: query
+      description: Constrain the transaction history request to transactions with
+        effective time at or after this date/time. If absent defaults to newest-time
+        minus 90 days.  Format is aligned to DateTimeString common type
+      schema:
+        type: string
+        x-cds-type: DateTimeString
+      x-cds-type: DateTimeString
+  #-------------------------------
+  # Reusable responses
+  #-------------------------------
+  responses:
+    401Unauthorised:
+      description: Unauthorised
+    403Forbidden:
+      description: Forbidden
+    404NotFound:
+      description: The specified resource was not found.
+    400BadRequest:
+      description: Request is invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorList'
+    429RateLimited:
+      description: Ratelimit reached
+    GenericError:
+      description: An error occurred.
+      content:
+        application/json:
+          schema:
+            type: string
+            example: something went wrong
