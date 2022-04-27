@@ -19,8 +19,8 @@ paths:
         - Transactions
       summary: Get Transactions Per Use Case
       description: |-
-        Obtain transactions with .operationId: getTransanctions
-      operationId: getTransanctions
+        Obtain transactions with .operationId: getTransactions
+      operationId: getTransactions
       parameters:
         - $ref: '#/components/parameters/ParamUseCase'
         - $ref: '#/components/parameters/ParamTransactionOldestRetrievalTime'
