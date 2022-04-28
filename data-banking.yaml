@@ -1,8 +1,8 @@
 openapi: 3.0.1
 info:
-  title: Adatree ADR Platform Data API
+  title: Adatree ADR Platform Data Banking API
   description: |-
-    Adatree's Accredited Data Recipient (ADR) Platform Data API definition.
+    Adatree's Accredited Data Recipient (ADR) Platform Data Banking API definition.
   contact:
     name: Adatree Pty Ltd
     url: https://adatree.com.au
@@ -51,6 +51,15 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    m2m:
+      type: oauth2
+      description: Machine to machine OAuth2 to access infosec token service
+      flows:
+        clientCredentials:
+          tokenUrl: https://adatree-nonprod-adr.auth.ap-southeast-2.amazoncognito.com/oauth2/token
+          scopes:
+            'authorizations:write': allow ADR to create a Authorisation Request for a consumer
+            'tokens:write': allow ADR to create or update Authorisation Request
   schemas:
     ResponseTransactionList:
       type: object
@@ -267,7 +276,7 @@ components:
         extendedDescription:
           type: string
           description: An extended string description. Only present if specified by the extensionUType field
-          example: extended descirption of a transaction
+          example: extended description of a transaction
         endToEndId:
           type: string
           description: An end to end ID for the payment created at initiation
@@ -303,6 +312,7 @@ components:
           enum:
             - X2P1.01
     Transaction_adatree:
+      description: Extra data and metadata provided by Adatree
       required:
         - resourceId
         - cdrArrangementId
@@ -327,14 +337,169 @@ components:
         personetics:
           $ref: '#/components/schemas/Transaction_adatree_personetics'
     Transaction_adatree_personetics:
+      description: Personetics is Adatree's transaction categorisation partner
       required:
         - categoryName
         - subcategoryName
       properties:
         categoryName:
           type: string
+          example: "Cash Deposit"
+          enum:
+            - "Cash Deposit"
+            - "Cash Withdrawal"
+            - "Check Deposit"
+            - "Checks Posted"
+            - "Credit Card Payments"
+            - "Digital Wallet"
+            - "Dining"
+            - "Direct Debit & Standing Order"
+            - "Direct Deposit"
+            - "Donations"
+            - "Education"
+            - "Entertainment"
+            - "Fees & Other charges"
+            - "Groceries"
+            - "Health & Fitness"
+            - "Household"
+            - "Insurance"
+            - "Interest & Dividends"
+            - "Kids & Family"
+            - "Loan & Mortgage"
+            - "Office expenses"
+            - "Paycheck, Pensions & Annuity"
+            - "Personal Care"
+            - "Savings & Investments"
+            - "Shopping"
+            - "Taxes & Authorities"
+            - "Transfers Between Own Accounts"
+            - "Transportation"
+            - "Travel"
+            - "Utilities"
+            - "Other Deposits"
+            - "Other transfers"
+            - "Other"
         subCategoryName:
           type: string
+          example: "Cash Deposit"
+          enum:
+            - "Cash Deposit"
+            - "Cash Withdrawal"
+            - "Check Deposit"
+            - "Checks Posted"
+            - "Credit Card Payments"
+            - "P2P"
+            - "Digital Wallet"
+            - "Bars & Pubs"
+            - "Fast Food"
+            - "Restaurants"
+            - "Dining"
+            - "Direct Debit & Standing Order"
+            - "Direct Deposit"
+            - "Donations"
+            - "Elementary & Secondary School"
+            - "Higher Education"
+            - "Vocational Schools"
+            - "Education"
+            - "Attractions"
+            - "Books & Newspapers"
+            - "Digital Entertainment"
+            - "Games"
+            - "Movies, Music & Shows"
+            - "Sport Entertainment"
+            - "Entertainment"
+            - "Overdraft Fees"
+            - "Service Fees"
+            - "ATM Fees"
+            - "Conversion Fees"
+            - "Other Fees and Charges"
+            - "Bakeries"
+            - "Deli"
+            - "Liquor Stores"
+            - "Supermarket, Grocery & Convenience Stores"
+            - "Drugs & Pharmacy"
+            - "Fitness & Leisure"
+            - "Medical & Healthcare"
+            - "Health & fitness"
+            - "Cleaning"
+            - "Construction"
+            - "Furniture"
+            - "Gardening"
+            - "Hardware & Appliances"
+            - "Heating, Plumbing, Electricity"
+            - "Household Services"
+            - "Pet Care & Supplies"
+            - "Real Estate"
+            - "Household"
+            - "Insurance"
+            - "Life Insurance"
+            - "Car Insurance"
+            - "Pet Insurance"
+            - "Property & Casualty Insurance"
+            - "Other Insurance"
+            - "Medical Insurance"
+            - "Interest deposit"
+            - "Dividends"
+            - "Investment deposit"
+            - "Activities & Attractions"
+            - "Child Care"
+            - "Children's Clothings Stores"
+            - "Kids & Family"
+            - "Line of Credit"
+            - "Mortgage"
+            - "Car Finance"
+            - "Personal Loan"
+            - "Student Loan"
+            - "Equipment Finance"
+            - "Payday & Pawn & Title Loans"
+            - "Healthcare Finance"
+            - "Other Loans"
+            - "Loans"
+            - "Electronics & Computers"
+            - "General Office Expenses"
+            - "Office Supplies"
+            - "Photography, Publishing & Printing"
+            - "Professional Services"
+            - "Shipping & Deliveries"
+            - "Office expenses"
+            - "Other"
+            - "Other Deposits"
+            - "Other Transfers"
+            - "Paycheck"
+            - "Pension"
+            - "Annuities"
+            - "Beauty Products"
+            - "Hair, Nails & Beauty Shops"
+            - "Laundry & Dry Cleaning"
+            - "Personal Care"
+            - "Other Savings & Investments"
+            - "Investments"
+            - "Savings"
+            - "Apparel - Clothing, Shoes & Accessories"
+            - "Art Galleries & Antiques"
+            - "Department & Discount Stores"
+            - "Electronics"
+            - "Hobbies & Gifts"
+            - "Jewelry"
+            - "Shopping"
+            - "Government Services"
+            - "Taxes, Fines & Bail Bonds"
+            - "Taxes & Authorities"
+            - "Currency Exchange"
+            - "Transfers between own accounts"
+            - "Gas Station"
+            - "Parking & Tolls"
+            - "Public Transportation"
+            - "Vehicle Dealers"
+            - "Vehicle Operating Expenses"
+            - "Transportation"
+            - "Airlines"
+            - "Car Rentals"
+            - "Hotels, Resorts & Lodgings"
+            - "Travel"
+            - "Electricity, Water, Gas"
+            - "Phone & Internet"
+            - "Utilities"
   #-------------------------------
   # Reusable parameters
   #-------------------------------
@@ -374,6 +539,7 @@ components:
       schema:
         type: string
         x-cds-type: DateTimeString
+        example: "2012-12-25T15:43:00-08:00"
       x-cds-type: DateTimeString
     ParamTransactionNewestRetrievalTime:
       name: newest-retrieval-time
@@ -383,6 +549,7 @@ components:
       schema:
         type: string
         x-cds-type: DateTimeString
+        example: "2012-12-25T15:43:00-08:00"
       x-cds-type: DateTimeString
     ParamTransactionNewestTime:
       name: newest-time
@@ -393,6 +560,7 @@ components:
       schema:
         type: string
         x-cds-type: DateTimeString
+        example: "2012-12-25T15:43:00-08:00"
       x-cds-type: DateTimeString
     ParamTransactionOldestTime:
       name: oldest-time
@@ -403,6 +571,7 @@ components:
       schema:
         type: string
         x-cds-type: DateTimeString
+        example: "2012-12-25T15:43:00-08:00"
       x-cds-type: DateTimeString
   #-------------------------------
   # Reusable responses
