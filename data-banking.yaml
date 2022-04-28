@@ -58,8 +58,7 @@ components:
         clientCredentials:
           tokenUrl: https://adatree-nonprod-adr.auth.ap-southeast-2.amazoncognito.com/oauth2/token
           scopes:
-            'authorizations:write': allow ADR to create a Authorisation Request for a consumer
-            'tokens:write': allow ADR to create or update Authorisation Request
+            'data:banking:transactions:read': allow read on transactions
   schemas:
     ResponseTransactionList:
       type: object
