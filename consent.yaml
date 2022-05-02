@@ -507,16 +507,23 @@ components:
   schemas:
     Authorization:
       type: object
+      required:
+        - code
+        - id_token
+        - state
       properties:
         code:
           type: string
           description: Authorization code returned from the data holder that will be used as part of token request validation.
+          example: lFDNAS-JVITGzvba3yXfrPR8hWZlCKy6nutbzrmXKop56"
         state:
           type: string
           description: The state is a parameter returned by the data holder that is used to prevent CSRF attacks. Must be unique per authorization request.
+          example: f99953a5-49a5-497c-91b6-4bd14cdace74
         id_token:
           type: string
           description: ID Token value associated with the authenticated session that is returned from the data holder.
+          example: eyJraWQiOiIxZTlnZGs3IiwiYWxnIjoiUl...
     TokenCreatedResponse:
       type: object
       properties:
