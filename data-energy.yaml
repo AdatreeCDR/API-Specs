@@ -7,7 +7,7 @@ info:
     name: Adatree Pty Ltd
     url: https://adatree.com.au
     email: engineering@adatree.com.au
-  version: "1.0.0-rc2"
+  version: "1.0.0-rc3"
 servers:
   - url: /
 paths:
