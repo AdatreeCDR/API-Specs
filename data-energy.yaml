@@ -7,7 +7,7 @@ info:
     name: Adatree Pty Ltd
     url: https://adatree.com.au
     email: engineering@adatree.com.au
-  version: "1.0.0-rc1"
+  version: "1.0.0-rc2"
 servers:
   - url: /
 paths:
@@ -69,6 +69,7 @@ paths:
         authorised the current session
       operationId: listServicePoints
       parameters:
+        - $ref: '#/components/parameters/QueryUseCaseId'
         - $ref: '#/components/parameters/QueryServicePointIds'
         - $ref: '#/components/parameters/QueryDataHolderBrandIds'
         - $ref: '#/components/parameters/QueryConsumerIds'
@@ -143,6 +144,7 @@ paths:
       description: Obtain usage data for all service points associated with the customer
       operationId: listUsageBulk
       parameters:
+        - $ref: '#/components/parameters/QueryUseCaseId'
         - $ref: '#/components/parameters/QueryServicePointIds'
         - $ref: '#/components/parameters/QueryDataHolderBrandIds'
         - $ref: '#/components/parameters/QueryConsumerIds'
@@ -191,6 +193,7 @@ paths:
       description: Obtain DER data for all service points associated with the customer
       operationId: listDERBulk
       parameters:
+        - $ref: '#/components/parameters/QueryUseCaseId'
         - $ref: '#/components/parameters/QueryServicePointIds'
         - $ref: '#/components/parameters/QueryDataHolderBrandIds'
         - $ref: '#/components/parameters/QueryConsumerIds'
@@ -216,6 +219,7 @@ paths:
         consent
       operationId: listAccounts
       parameters:
+        - $ref: '#/components/parameters/QueryUseCaseId'
         - $ref: '#/components/parameters/QueryAccountIds'
         - $ref: '#/components/parameters/QueryDataHolderBrandIds'
         - $ref: '#/components/parameters/QueryConsumerIds'
@@ -330,6 +334,7 @@ paths:
       description: Obtain the current balance for all accounts
       operationId: listBalancesBulk
       parameters:
+        - $ref: '#/components/parameters/QueryUseCaseId'
         - $ref: '#/components/parameters/QueryAccountIds'
         - $ref: '#/components/parameters/QueryDataHolderBrandIds'
         - $ref: '#/components/parameters/QueryConsumerIds'
@@ -380,6 +385,7 @@ paths:
       description: Obtain the invoices for all accounts
       operationId: listInvoicesBulk
       parameters:
+        - $ref: '#/components/parameters/QueryUseCaseId'
         - $ref: '#/components/parameters/QueryAccountIds'
         - $ref: '#/components/parameters/QueryDataHolderBrandIds'
         - $ref: '#/components/parameters/QueryConsumerIds'
@@ -432,6 +438,7 @@ paths:
       description: Obtain billing transactions for all accounts
       operationId: listBillingBulk
       parameters:
+        - $ref: '#/components/parameters/QueryUseCaseId'
         - $ref: '#/components/parameters/QueryAccountIds'
         - $ref: '#/components/parameters/QueryDataHolderBrandIds'
         - $ref: '#/components/parameters/QueryConsumerIds'
@@ -484,11 +491,18 @@ components:
       schema:
         type: string
     # Query
-    QueryPlanType:
-      name: type
+    QueryUseCaseId:
+      name: useCaseId
       description: Used to filter results on the type field.  Any one of the valid
         values for this field can be supplied plus 'ALL'.  If absent defaults to
         'ALL'
+      in: query
+      schema:
+        type: string
+    QueryPlanType:
+      name: type
+      description: Used to filter results on the useCaseId field. useCaseId is the
+        identifier of the use case for which this data was collected
       in: query
       schema:
         default: ALL
@@ -3883,6 +3897,10 @@ components:
           type: string
           example: 55b3299a-3e50-48a2-a190-cca263ccaba5
           description: identifier of data holder brand that is issued by the CDR Register
+        useCase:
+          type: string
+          example: USE_CASE_ID_A001
+          description: identifier of the use case for which this data was collected
   responses:
     404NotFound:
       description: The specified resource was not found.
