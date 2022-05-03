@@ -7,7 +7,7 @@ info:
     name: Adatree Pty Ltd
     url: https://adatree.com.au
     email: engineering@adatree.com.au
-  version: "1.0.0-rc3"
+  version: "1.0.0-rc4"
 servers:
   - url: /
 paths:
@@ -493,16 +493,16 @@ components:
     # Query
     QueryUseCaseId:
       name: useCaseId
-      description: Used to filter results on the type field.  Any one of the valid
-        values for this field can be supplied plus 'ALL'.  If absent defaults to
-        'ALL'
+      description: Used to filter results on the useCaseId field. useCaseId is the
+        identifier of the use case for which this data was collected
       in: query
       schema:
         type: string
     QueryPlanType:
       name: type
-      description: Used to filter results on the useCaseId field. useCaseId is the
-        identifier of the use case for which this data was collected
+      description: Used to filter results on the type field.  Any one of the valid
+        values for this field can be supplied plus 'ALL'.  If absent defaults to
+        'ALL'
       in: query
       schema:
         default: ALL
@@ -512,6 +512,7 @@ components:
           - REGULATED
           - ALL
         type: string
+      style: form
     QueryPlanFuelType:
       name: fuelType
       description: Used to filter results on the fuelType field.  Any one of the
@@ -526,6 +527,7 @@ components:
           - DUAL
           - ALL
         type: string
+      style: form
     QueryPlanEffective:
       description: Allows for the filtering of plans based on whether the current
         time is within the period of time defined as effective by the effectiveFrom
@@ -540,6 +542,7 @@ components:
           - FUTURE
           - ALL
         type: string
+      style: form
     QueryServicePointIds:
       name: servicePointIds
       in: query
