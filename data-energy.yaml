@@ -3897,7 +3897,7 @@ components:
           type: string
           example: 55b3299a-3e50-48a2-a190-cca263ccaba5
           description: identifier of data holder brand that is issued by the CDR Register
-        useCase:
+        useCaseId:
           type: string
           example: USE_CASE_ID_A001
           description: identifier of the use case for which this data was collected
