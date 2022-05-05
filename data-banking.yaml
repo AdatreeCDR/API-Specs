@@ -7,9 +7,9 @@ info:
     name: Adatree Pty Ltd
     url: https://adatree.com.au
     email: engineering@adatree.com.au
-  version: "0.0.1"
+  version: "1.0.0"
 servers:
-  - url: https://cdr-insights-prod.api.adatree.com.au
+  - url: https://adatree-prod.adatree.com.au
 paths:
   /data/banking/transactions:
     get:
@@ -23,13 +23,13 @@ paths:
         Obtain transactions with .operationId: getTransactions
       operationId: getTransactions
       parameters:
-        - $ref: '#/components/parameters/ParamUseCase'
-        - $ref: '#/components/parameters/ParamTransactionOldestRetrievalTime'
-        - $ref: '#/components/parameters/ParamTransactionNewestRetrievalTime'
-        - $ref: '#/components/parameters/ParamTransactionOldestTime'
-        - $ref: '#/components/parameters/ParamTransactionNewestTime'
-        - $ref: '#/components/parameters/ParamPage'
-        - $ref: '#/components/parameters/ParamPageSize'
+        - $ref: '#/components/parameters/QueryUseCaseIds'
+        - $ref: '#/components/parameters/QueryTransactionOldestRetrievalTime'
+        - $ref: '#/components/parameters/QueryTransactionNewestRetrievalTime'
+        - $ref: '#/components/parameters/QueryTransactionOldestTime'
+        - $ref: '#/components/parameters/QueryTransactionNewestTime'
+        - $ref: '#/components/parameters/QueryPage'
+        - $ref: '#/components/parameters/QueryPageSize'
       responses:
         200:
           description: Success
@@ -58,7 +58,7 @@ components:
         clientCredentials:
           tokenUrl: https://adatree-nonprod-adr.auth.ap-southeast-2.amazoncognito.com/oauth2/token
           scopes:
-            'data:banking:transactions:read': allow read on transactions
+            'data:banking:transactions:read': allow ADR to create a Authorisation Request for a consumer
   schemas:
     ResponseTransactionList:
       type: object
@@ -316,6 +316,7 @@ components:
         - resourceId
         - cdrArrangementId
         - dataHolderBrandId
+        - useCaseId
       properties:
         resourceId:
           type: string
@@ -329,6 +330,10 @@ components:
           type: string
           example: 55b3299a-3e50-48a2-a190-cca263ccaba5
           description: Id of data holder brand
+        useCaseId:
+          type: string
+          example: HOME_LOAN
+          description: Use case id for the related arrangement/consent
         categorisation:
           $ref: '#/components/schemas/Transaction_adatree_categorisation'
     Transaction_adatree_categorisation:
@@ -503,7 +508,7 @@ components:
   # Reusable parameters
   #-------------------------------
   parameters:
-    ParamPage:
+    QueryPage:
       name: page
       in: query
       description: Page of results to request (standard pagination)
@@ -513,7 +518,7 @@ components:
         default: 1
         minimum: 1
         example: 1
-    ParamPageSize:
+    QueryPageSize:
       name: page-size
       in: query
       description: Page size to request. Default is 25 (standard pagination)
@@ -522,15 +527,18 @@ components:
         default: 25
         minimum: 1
         example: 25
-    ParamUseCase:
-      name: use-case-id
+    QueryUseCaseIds:
+      name: useCaseIds
       in: query
-      required: true
-      description: Use case for which the transactions are being queried
+      description: Used to filter results on the useCaseId field.
       schema:
-        type: string
-        example: "HOME_LOAN"
-    ParamTransactionOldestRetrievalTime:
+        type: array
+        items:
+          type: string
+          description: Array of specific useCaseIds to obtain data for
+          example: HOME_LOAN
+          x-cds-type: ASCIIString
+    QueryTransactionOldestRetrievalTime:
       name: oldest-retrieval-time
       in: query
       description: Constrain the transaction history request to transactions with retrieval time at or after this date/time. If absent defaults newest time minus 90 days. Format
@@ -540,7 +548,7 @@ components:
         x-cds-type: DateTimeString
         example: "2012-12-25T15:43:00-08:00"
       x-cds-type: DateTimeString
-    ParamTransactionNewestRetrievalTime:
+    QueryTransactionNewestRetrievalTime:
       name: newest-retrieval-time
       in: query
       description: Constrain the transaction history request to transactions with retrieval time at or before this date/time. If absent defaults to now. Format
@@ -550,7 +558,7 @@ components:
         x-cds-type: DateTimeString
         example: "2012-12-25T15:43:00-08:00"
       x-cds-type: DateTimeString
-    ParamTransactionNewestTime:
+    QueryTransactionNewestTime:
       name: newest-time
       in: query
       description: Constrain the transaction history request to transactions with
@@ -561,7 +569,7 @@ components:
         x-cds-type: DateTimeString
         example: "2012-12-25T15:43:00-08:00"
       x-cds-type: DateTimeString
-    ParamTransactionOldestTime:
+    QueryTransactionOldestTime:
       name: oldest-time
       in: query
       description: Constrain the transaction history request to transactions with
