@@ -23,13 +23,13 @@ paths:
         Obtain transactions with .operationId: getTransactions
       operationId: getTransactions
       parameters:
-        - $ref: '#/components/parameters/ParamUseCase'
-        - $ref: '#/components/parameters/ParamTransactionOldestRetrievalTime'
-        - $ref: '#/components/parameters/ParamTransactionNewestRetrievalTime'
-        - $ref: '#/components/parameters/ParamTransactionOldestTime'
-        - $ref: '#/components/parameters/ParamTransactionNewestTime'
-        - $ref: '#/components/parameters/ParamPage'
-        - $ref: '#/components/parameters/ParamPageSize'
+        - $ref: '#/components/parameters/QueryUseCaseIds'
+        - $ref: '#/components/parameters/QueryTransactionOldestRetrievalTime'
+        - $ref: '#/components/parameters/QueryTransactionNewestRetrievalTime'
+        - $ref: '#/components/parameters/QueryTransactionOldestTime'
+        - $ref: '#/components/parameters/QueryTransactionNewestTime'
+        - $ref: '#/components/parameters/QueryPage'
+        - $ref: '#/components/parameters/QueryPageSize'
       responses:
         200:
           description: Success
@@ -316,6 +316,7 @@ components:
         - resourceId
         - cdrArrangementId
         - dataHolderBrandId
+        - useCaseId
       properties:
         resourceId:
           type: string
@@ -329,6 +330,10 @@ components:
           type: string
           example: 55b3299a-3e50-48a2-a190-cca263ccaba5
           description: Id of data holder brand
+        useCaseId:
+          type: string
+          example: HOME_LOAN
+          description: Use case id for the related arrangement/consent
         categorisation:
           $ref: '#/components/schemas/Transaction_adatree_categorisation'
     Transaction_adatree_categorisation:
@@ -503,7 +508,7 @@ components:
   # Reusable parameters
   #-------------------------------
   parameters:
-    ParamPage:
+    QueryPage:
       name: page
       in: query
       description: Page of results to request (standard pagination)
@@ -513,8 +518,8 @@ components:
         default: 1
         minimum: 1
         example: 1
-    ParamPageSize:
-      name: page-size
+    QueryPageSize:
+      name: pageSize
       in: query
       description: Page size to request. Default is 25 (standard pagination)
       schema:
@@ -522,16 +527,19 @@ components:
         default: 25
         minimum: 1
         example: 25
-    ParamUseCase:
-      name: use-case-id
+    QueryUseCaseIds:
+      name: useCaseIds
       in: query
-      required: true
-      description: Use case for which the transactions are being queried
+      description: Used to filter results on the useCaseId field.
       schema:
-        type: string
-        example: "HOME_LOAN"
-    ParamTransactionOldestRetrievalTime:
-      name: oldest-retrieval-time
+        type: array
+        items:
+          type: string
+          x-cds-type: ASCIIString
+          description: Array of specific use-case-ids to obtain data for
+          example: HOME_LOAN
+    QueryTransactionOldestRetrievalTime:
+      name: oldestRetrievalTime
       in: query
       description: Constrain the transaction history request to transactions with retrieval time at or after this date/time. If absent defaults newest time minus 90 days. Format
         is aligned to DateTimeString common type.
@@ -539,9 +547,8 @@ components:
         type: string
         x-cds-type: DateTimeString
         example: "2012-12-25T15:43:00-08:00"
-      x-cds-type: DateTimeString
-    ParamTransactionNewestRetrievalTime:
-      name: newest-retrieval-time
+    QueryTransactionNewestRetrievalTime:
+      name: newestRetrievalTime
       in: query
       description: Constrain the transaction history request to transactions with retrieval time at or before this date/time. If absent defaults to now. Format
         is aligned to DateTimeString common type.
@@ -549,9 +556,8 @@ components:
         type: string
         x-cds-type: DateTimeString
         example: "2012-12-25T15:43:00-08:00"
-      x-cds-type: DateTimeString
-    ParamTransactionNewestTime:
-      name: newest-time
+    QueryTransactionNewestTime:
+      name: newestTime
       in: query
       description: Constrain the transaction history request to transactions with
         effective time at or before this date/time.  If absent defaults to today.  Format
@@ -560,9 +566,8 @@ components:
         type: string
         x-cds-type: DateTimeString
         example: "2012-12-25T15:43:00-08:00"
-      x-cds-type: DateTimeString
-    ParamTransactionOldestTime:
-      name: oldest-time
+    QueryTransactionOldestTime:
+      name: oldestTime
       in: query
       description: Constrain the transaction history request to transactions with
         effective time at or after this date/time. If absent defaults to newest-time
@@ -571,7 +576,6 @@ components:
         type: string
         x-cds-type: DateTimeString
         example: "2012-12-25T15:43:00-08:00"
-      x-cds-type: DateTimeString
   #-------------------------------
   # Reusable responses
   #-------------------------------
