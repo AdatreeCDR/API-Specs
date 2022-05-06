@@ -24,6 +24,9 @@ paths:
       operationId: getTransactions
       parameters:
         - $ref: '#/components/parameters/QueryUseCaseIds'
+        - $ref: '#/components/parameters/QueryCdrArrangementIds'
+        - $ref: '#/components/parameters/QueryConsumerIds'
+        - $ref: '#/components/parameters/QueryDataHolderBrandIds'
         - $ref: '#/components/parameters/QueryTransactionOldestRetrievalTime'
         - $ref: '#/components/parameters/QueryTransactionNewestRetrievalTime'
         - $ref: '#/components/parameters/QueryTransactionOldestTime'
@@ -536,8 +539,41 @@ components:
         items:
           type: string
           x-cds-type: ASCIIString
-          description: Array of specific use-case-ids to obtain data for
+          description: Array of specific UseCaseIds to obtain data for
           example: HOME_LOAN
+    QueryCdrArrangementIds:
+      name: cdrArrangementIds
+      in: query
+      description: Used to filter results on the cdrArrangementId field.
+      schema:
+        type: array
+        items:
+          type: string
+          x-cds-type: ASCIIString
+          description: Array of specific cdrArrangementIds to obtain data for
+          example: 30370f1b-cd27-4d56-b56d-beb49fc9aa48
+    QueryConsumerIds:
+      name: consumerIds
+      in: query
+      description: Used to filter results on the consumerId field.
+      schema:
+        type: array
+        items:
+          type: string
+          x-cds-type: ASCIIString
+          description: Array of specific consumerIds to obtain data for
+          example: 30370f1b-cd27-4d56-b56d-beb49fc9aa48
+    QueryDataHolderBrandIds:
+      name: dataHolderBrandIds
+      in: query
+      description: Used to filter results on the dataHolderBrandId field.
+      schema:
+        type: array
+        items:
+          type: string
+          x-cds-type: ASCIIString
+          description: Array of specific dataHolderBrandIds to obtain data for
+          example: 30370f1b-cd27-4d56-b56d-beb49fc9aa48
     QueryTransactionOldestRetrievalTime:
       name: oldestRetrievalTime
       in: query
