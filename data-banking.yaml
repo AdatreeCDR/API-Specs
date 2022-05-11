@@ -27,6 +27,9 @@ paths:
         - $ref: '#/components/parameters/QueryCdrArrangementIds'
         - $ref: '#/components/parameters/QueryConsumerIds'
         - $ref: '#/components/parameters/QueryDataHolderBrandIds'
+        - $ref: '#/components/parameters/QueryTransactionTypes'
+        - $ref: '#/components/parameters/QueryTransactionMinimumAmount'
+        - $ref: '#/components/parameters/QueryTransactionMaximumAmount'
         - $ref: '#/components/parameters/QueryTransactionOldestRetrievalTime'
         - $ref: '#/components/parameters/QueryTransactionNewestRetrievalTime'
         - $ref: '#/components/parameters/QueryTransactionOldestTime'
@@ -318,6 +321,7 @@ components:
       required:
         - resourceId
         - cdrArrangementId
+        - consumerId
         - dataHolderBrandId
         - useCaseId
       properties:
@@ -337,6 +341,10 @@ components:
           type: string
           example: HOME_LOAN
           description: Use case id for the related arrangement/consent
+        consumerId:
+          type: string
+          example: 55b3299a-3e50-48a2-a190-cca263ccaba5
+          description: Consumer id for which transactions are provided
         categorisation:
           $ref: '#/components/schemas/Transaction_adatree_categorisation'
     Transaction_adatree_categorisation:
@@ -612,6 +620,33 @@ components:
         type: string
         x-cds-type: DateTimeString
         example: "2012-12-25T15:43:00-08:00"
+    QueryTransactionTypes:
+      name: types
+      in: query
+      description: Used to filter results on the type field.
+      schema:
+        type: array
+        items:
+          type: string
+          x-cds-type: ASCIIString
+          description: Array of specific types to obtain data for
+          example: FEE
+    QueryTransactionMinimumAmount:
+      name: minimumAmount
+      in: query
+      description: Used to filter results on the amount field
+      schema:
+        type: number
+        example: 100
+        x-cds-type: Number
+    QueryTransactionMaximumAmount:
+      name: maximumAmount
+      in: query
+      description: Used to filter results on the amount field
+      schema:
+        type: number
+        example: 300
+        x-cds-type: Number
   #-------------------------------
   # Reusable responses
   #-------------------------------
