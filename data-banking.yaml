@@ -18,7 +18,7 @@ paths:
         - m2m: [ 'data:banking:transactions:read' ]
       tags:
         - Transactions
-      summary: Get Transactions Per Use Case
+      summary: Get Transactions
       description: |-
         Obtain transactions with .operationId: getTransactions
       operationId: getTransactions
