@@ -3886,24 +3886,33 @@ components:
       type: object
     Adatree:
       description: Extra data and metadata provided by Adatree
+      required:
+        - consentId
+        - consumerId
+        - cdrArrangementId
+        - dataHolderBrandId
+        - useCaseId
       properties:
+        consentId:
+          type: string
+          example: 55b3299a-3e50-48a2-a190-cca263ccaba5
+          description: Consent Id for related resource
         consumerId:
           type: string
-          example: 'auth0|92f882aee5c67f0071a4fx9y'
-          description: consumer identifier provided to Adatree at the time of consent. Usually the suject identifier
-            issued by the Identity Provider used for login purposes.
+          example: 55b3299a-3e50-48a2-a190-cca263ccaba5
+          description: Consumer Id for related resource
         cdrArrangementId:
           type: string
           example: f111111-d7c8-4679-a165-aa406cd62b13
-          description: identifier of the related cdr arrangement
+          description: CDR Arrangement for related resource
         dataHolderBrandId:
           type: string
           example: 55b3299a-3e50-48a2-a190-cca263ccaba5
-          description: identifier of data holder brand that is issued by the CDR Register
+          description: Data Holder Brand Id for related resource
         useCaseId:
           type: string
-          example: USE_CASE_ID_A001
-          description: identifier of the use case for which this data was collected
+          example: HOME_LOAN
+          description: Use Case Id for related resource
   responses:
     404NotFound:
       description: The specified resource was not found.
