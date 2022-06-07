@@ -24,6 +24,7 @@ paths:
       operationId: getTransactions
       parameters:
         - $ref: '#/components/parameters/QueryUseCaseIds'
+        - $ref: '#/components/parameters/QueryAccountIds'
         - $ref: '#/components/parameters/QueryCdrArrangementIds'
         - $ref: '#/components/parameters/QueryConsentIds'
         - $ref: '#/components/parameters/QueryConsumerIds'
@@ -552,6 +553,17 @@ components:
         default: 25
         minimum: 1
         example: 25
+    QueryAccountIds:
+      name: accountIds
+      in: query
+      description: Used to filter results on the accountId field.
+      schema:
+        type: array
+        items:
+          type: string
+          x-cds-type: ASCIIString
+          description: Array of specific accountIds to obtain data for
+          example: 30370f1b-cd27-4d56-b56d-beb49fc9aa48
     QueryUseCaseIds:
       name: useCaseIds
       in: query
@@ -697,4 +709,5 @@ components:
           schema:
             type: string
             example: something went wrong
+
 
