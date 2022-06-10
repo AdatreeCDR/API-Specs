@@ -11,44 +11,6 @@ info:
 servers:
   - url: https://cdr-insights-prod.api.adatree.com.au
 paths:
-  /data/banking/accounts:
-    get:
-      security:
-        - bearerAuth: [ 'data:banking:accounts:read' ]
-        - m2m: [ 'data:banking:accounts:read' ]
-      tags:
-        - Account Detail & Balance
-      summary: Get Accounts
-      description: |-
-        Obtain accounts detail and balance data
-      operationId: getAccountsDetailBalance
-      parameters:
-        - $ref: '#/components/parameters/QueryUseCaseIds'
-        - $ref: '#/components/parameters/QueryCdrArrangementIds'
-        - $ref: '#/components/parameters/QueryConsentIds'
-        - $ref: '#/components/parameters/QueryConsumerIds'
-        - $ref: '#/components/parameters/QueryAccountIds'
-        - $ref: '#/components/parameters/QueryDataHolderBrandIds'
-        - $ref: '#/components/parameters/QueryAccountIsOwned'
-        - $ref: '#/components/parameters/QueryAccountOpenStatus'
-        - $ref: '#/components/parameters/QueryProductCategory'
-        - $ref: '#/components/parameters/QueryPage'
-        - $ref: '#/components/parameters/QueryPageSize'
-      responses:
-        200:
-          description: Success
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/ResponseAccountList'
-        400:
-          $ref: '#/components/responses/400BadRequest'
-        401:
-          $ref: '#/components/responses/401Unauthorised'
-        403:
-          $ref: '#/components/responses/403Forbidden'
-        429:
-          $ref: '#/components/responses/429RateLimited'
   /data/banking/transactions:
     get:
       security:
@@ -83,6 +45,80 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/ResponseTransactionList'
+        400:
+          $ref: '#/components/responses/400BadRequest'
+        401:
+          $ref: '#/components/responses/401Unauthorised'
+        403:
+          $ref: '#/components/responses/403Forbidden'
+        429:
+          $ref: '#/components/responses/429RateLimited'
+  /data/banking/accounts:
+    get:
+      security:
+        - bearerAuth: [ 'data:banking:accounts:read' ]
+        - m2m: [ 'data:banking:accounts:read' ]
+      tags:
+        - Account Detail Balance
+      summary: Get Account Detail Balance
+      description: |-
+        Obtain accounts detail and balance data
+      operationId: getAccountsDetailBalance
+      parameters:
+        - $ref: '#/components/parameters/QueryUseCaseIds'
+        - $ref: '#/components/parameters/QueryCdrArrangementIds'
+        - $ref: '#/components/parameters/QueryConsentIds'
+        - $ref: '#/components/parameters/QueryConsumerIds'
+        - $ref: '#/components/parameters/QueryAccountIds'
+        - $ref: '#/components/parameters/QueryDataHolderBrandIds'
+        - $ref: '#/components/parameters/QueryAccountIsOwned'
+        - $ref: '#/components/parameters/QueryAccountOpenStatus'
+        - $ref: '#/components/parameters/QueryProductCategory'
+        - $ref: '#/components/parameters/QueryPage'
+        - $ref: '#/components/parameters/QueryPageSize'
+      responses:
+        200:
+          description: Success
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ResponseAccountList'
+        400:
+          $ref: '#/components/responses/400BadRequest'
+        401:
+          $ref: '#/components/responses/401Unauthorised'
+        403:
+          $ref: '#/components/responses/403Forbidden'
+        429:
+          $ref: '#/components/responses/429RateLimited'
+  /data/banking/payees:
+    get:
+      security:
+        - bearerAuth: [ 'data:banking:payees:read' ]
+        - m2m: [ 'data:banking:payees:read' ]
+      tags:
+        - BankingPayees
+      summary: Get Payees
+      description: |-
+        Obtain transactions with .operationId: getPayees
+      operationId: getPayees
+      parameters:
+        - $ref: '#/components/parameters/QueryUseCaseIds'
+        - $ref: '#/components/parameters/QueryCdrArrangementIds'
+        - $ref: '#/components/parameters/QueryConsentIds'
+        - $ref: '#/components/parameters/QueryConsumerIds'
+        - $ref: '#/components/parameters/QueryDataHolderBrandIds'
+        - $ref: '#/components/parameters/QueryPayeeTypes'
+        - $ref: '#/components/parameters/QueryPayeeIds'
+        - $ref: '#/components/parameters/QueryPage'
+        - $ref: '#/components/parameters/QueryPageSize'
+      responses:
+        200:
+          description: Success
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ResponsePayeeList'
         400:
           $ref: '#/components/responses/400BadRequest'
         401:
@@ -132,6 +168,19 @@ components:
           $ref: '#/components/schemas/LinksPaginated'
         meta:
           $ref: '#/components/schemas/MetaPaginated'
+    ResponsePayeeList:
+      type: object
+      required:
+        - data
+        - links
+        - meta
+      properties:
+        data:
+          $ref: '#/components/schemas/ResponsePayeeList_data'
+        links:
+          $ref: '#/components/schemas/LinksPaginated'
+        meta:
+          $ref: '#/components/schemas/MetaPaginated'
     ResponseAccountList_data:
       required:
         - accounts
@@ -141,6 +190,14 @@ components:
           description: The list of accounts returned. If the filter results in an empty set then this array may have no records
           items:
             $ref: '#/components/schemas/BankingAccountDetail'
+    ResponsePayeeList_data:
+      required:
+        - payees
+      properties:
+        payees:
+          type: array
+          items:
+            $ref: '#/components/schemas/PayeeDetail'
     BankingAccount:
       type: object
       required:
@@ -1544,6 +1601,304 @@ components:
             - "Vehicle Dealers"
             - "Vehicle Operating Expenses"
             - "Vocational Schools"
+    Payee:
+      example:
+        nickname: nickname
+        description: description
+        payeeId: payeeId
+        type: BILLER
+        creationDate: creationDate
+      properties:
+        payeeId:
+          description: ID of the payee adhering to the rules of ID permanence
+          type: string
+          x-cds-type: ASCIIString
+        nickname:
+          description: The short display name of the payee as provided by the customer.
+            Where a customer has not provided a nickname, a display name derived by
+            the bank for the payee consistent with existing digital banking channels
+          type: string
+        description:
+          description: A description of the payee provided by the customer
+          type: string
+        type:
+          description: The type of payee.<br/>DOMESTIC means a registered payee for
+            domestic payments including NPP. <br/>INTERNATIONAL means a registered
+            payee for international payments. <br/>BILLER means a registered payee
+            for BPAY.
+            wallet
+          enum:
+            - BILLER
+            - DOMESTIC
+            - INTERNATIONAL
+          type: string
+        creationDate:
+          description: The date the payee was created by the customer
+          type: string
+          x-cds-type: DateString
+      required:
+        - nickname
+        - payeeId
+        - type
+    PayeeDetail:
+      allOf:
+        - $ref: '#/components/schemas/Payee'
+        - $ref: '#/components/schemas/PayeeDetail_allOf'
+        - type: object
+          properties:
+            adatree:
+              $ref: '#/components/schemas/Adatree'
+    PayeeDetail_allOf:
+      properties:
+        payeeUType:
+          description: Type of object included that describes the payee in detail
+          enum:
+            - biller
+            - domestic
+            - international
+          type: string
+        biller:
+          $ref: '#/components/schemas/BillerPayee'
+        domestic:
+          $ref: '#/components/schemas/DomesticPayee'
+        international:
+          $ref: '#/components/schemas/InternationalPayee'
+      required:
+        - payeeUType
+      type: object
+      x-conditional:
+        - biller
+        - domestic
+        - international
+    BillerPayee:
+      example:
+        billerName: billerName
+        crn: crn
+        billerCode: billerCode
+      properties:
+        billerCode:
+          description: BPAY Biller Code of the Biller
+          type: string
+        crn:
+          description: BPAY CRN of the Biller (if available).<br/>Where the CRN contains
+            sensitive information, it should be masked in line with how the Data Holder
+            currently displays account identifiers in their existing online banking
+            channels. If the contents of the CRN match the format of a Credit Card
+            PAN they should be masked according to the rules applicable for MaskedPANString.
+            If the contents are are otherwise sensitive, then it should be masked
+            using the rules applicable for the MaskedAccountString common type.
+          type: string
+        billerName:
+          description: Name of the Biller
+          type: string
+      required:
+        - billerCode
+        - billerName
+      type: object
+      x-conditional:
+        - crn
+    InternationalPayee:
+      example:
+        bankDetails:
+          country: country
+          routingNumber: routingNumber
+          fedWireNumber: fedWireNumber
+          chipNumber: chipNumber
+          legalEntityIdentifier: legalEntityIdentifier
+          accountNumber: accountNumber
+          bankAddress:
+            address: address
+            name: name
+          sortCode: sortCode
+          beneficiaryBankBIC: beneficiaryBankBIC
+        beneficiaryDetails:
+          country: country
+          name: name
+          message: message
+      properties:
+        beneficiaryDetails:
+          $ref: '#/components/schemas/InternationalPayee_beneficiaryDetails'
+        bankDetails:
+          $ref: '#/components/schemas/InternationalPayee_bankDetails'
+      required:
+        - bankDetails
+        - beneficiaryDetails
+      type: object
+    DomesticPayee:
+      example:
+        payeeAccountUType: account
+        payId:
+          identifier: identifier
+          name: name
+          type: ABN
+        account:
+          bsb: bsb
+          accountName: accountName
+          accountNumber: accountNumber
+        card:
+          cardNumber: cardNumber
+      properties:
+        payeeAccountUType:
+          description: 'Type of account object included. Valid values are: **account**
+                  A standard Australian account defined by BSB/Account Number. **card**
+                  A credit or charge card to pay to (note that PANs are masked). **payId**
+                  A PayID recognised by NPP'
+          enum:
+            - account
+            - card
+            - payId
+          type: string
+        account:
+          $ref: '#/components/schemas/DomesticPayeeAccount'
+        card:
+          $ref: '#/components/schemas/DomesticPayeeCard'
+        payId:
+          $ref: '#/components/schemas/DomesticPayeePayId'
+      required:
+        - payeeAccountUType
+      type: object
+      x-conditional:
+        - account
+        - card
+        - payId
+    DomesticPayeeAccount:
+      example:
+        bsb: bsb
+        accountName: accountName
+        accountNumber: accountNumber
+      properties:
+        accountName:
+          description: Name of the account to pay to
+          type: string
+        bsb:
+          description: BSB of the account to pay to
+          type: string
+        accountNumber:
+          description: Number of the account to pay to
+          type: string
+      required:
+        - accountNumber
+        - bsb
+      type: object
+    DomesticPayeeCard:
+      example:
+        cardNumber: cardNumber
+      properties:
+        cardNumber:
+          description: Name of the account to pay to
+          type: string
+          x-cds-type: MaskedPANString
+      required:
+        - cardNumber
+      type: object
+    DomesticPayeePayId:
+      example:
+        identifier: identifier
+        name: name
+        type: ABN
+      properties:
+        name:
+          description: The name assigned to the PayID by the owner of the PayID
+          type: string
+        identifier:
+          description: The identifier of the PayID (dependent on type)
+          type: string
+        type:
+          description: The type of the PayID
+          enum:
+            - ABN
+            - EMAIL
+            - ORG_IDENTIFIER
+            - TELEPHONE
+          type: string
+      required:
+        - identifier
+        - type
+      type: object
+    InternationalPayee_beneficiaryDetails:
+      example:
+        country: country
+        name: name
+        message: message
+      properties:
+        name:
+          description: Name of the beneficiary
+          type: string
+        country:
+          description: Country where the beneficiary resides. A valid [ISO 3166 Alpha-3](https://www.iso.org/iso-3166-country-codes.html)
+            country code
+          type: string
+          x-cds-type: ExternalRef
+        message:
+          description: Response message for the payment
+          type: string
+      required:
+        - country
+      type: object
+    InternationalPayee_bankDetails_bankAddress:
+      example:
+        address: address
+        name: name
+      properties:
+        name:
+          description: Name of the recipient Bank
+          type: string
+        address:
+          description: Address of the recipient Bank
+          type: string
+      required:
+        - address
+        - name
+      type: object
+    InternationalPayee_bankDetails:
+      example:
+        country: country
+        routingNumber: routingNumber
+        fedWireNumber: fedWireNumber
+        chipNumber: chipNumber
+        legalEntityIdentifier: legalEntityIdentifier
+        accountNumber: accountNumber
+        bankAddress:
+          address: address
+          name: name
+        sortCode: sortCode
+        beneficiaryBankBIC: beneficiaryBankBIC
+      properties:
+        country:
+          description: Country of the recipient institution. A valid [ISO 3166 Alpha-3](https://www.iso.org/iso-3166-country-codes.html)
+            country code
+          type: string
+          x-cds-type: ExternalRef
+        accountNumber:
+          description: Account Targeted for payment
+          type: string
+        bankAddress:
+          $ref: '#/components/schemas/InternationalPayee_bankDetails_bankAddress'
+        beneficiaryBankBIC:
+          description: Swift bank code.  Aligns with standard [ISO 9362](https://www.iso.org/standard/60390.html)
+          type: string
+          x-cds-type: ExternalRef
+        fedWireNumber:
+          description: Number for Fedwire payment (Federal Reserve Wire Network)
+          type: string
+        sortCode:
+          description: Sort code used for account identification in some jurisdictions
+          type: string
+        chipNumber:
+          description: Number for the Clearing House Interbank Payments System
+          type: string
+        routingNumber:
+          description: International bank routing number
+          type: string
+        legalEntityIdentifier:
+          description: The legal entity identifier (LEI) for the beneficiary.  Aligns
+            with [ISO 17442](https://www.iso.org/standard/59771.html)
+          type: string
+          x-cds-type: ExternalRef
+      required:
+        - accountNumber
+        - country
+      type: object
   #-------------------------------
   # Reusable parameters
   #-------------------------------
@@ -1753,6 +2108,29 @@ components:
         type: number
         example: 300
         x-cds-type: Number
+    QueryPayeeTypes:
+      name: types
+      in: query
+      description: Used to filter results on the payee type field.
+      schema:
+        type: array
+        items:
+          type: string
+          x-cds-type: ASCIIString
+          description: Array of specific types to obtain data for
+          example: BILLER
+    QueryPayeeIds:
+      name: payeeIds
+      in: query
+      required: false
+      description: Used to filter results on the payeeId field.
+      schema:
+        type: array
+        items:
+          type: string
+          x-cds-type: ASCIIString
+          description: Array of specific payeeIds to obtain data for
+          example: 30370f1b-cd27-4d56-b56d-beb49fc9aa48
   #-------------------------------
   # Reusable responses
   #-------------------------------
