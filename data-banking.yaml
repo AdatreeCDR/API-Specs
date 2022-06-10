@@ -17,7 +17,7 @@ paths:
         - bearerAuth: [ 'data:banking:accounts:read' ]
         - m2m: [ 'data:banking:accounts:read' ]
       tags:
-        - Account Detail Balance
+        - Account Detail & Balance
       summary: Get Accounts
       description: |-
         Obtain accounts detail and balance data
@@ -434,15 +434,9 @@ components:
     BankingBalance:
       type: object
       required:
-        - accountId
         - availableBalance
         - currentBalance
       properties:
-        accountId:
-          type: string
-          example: f632041c-d7c8-4679-a165-aa406cd62b13
-          description: A unique ID of the account adhering to the standards for ID permanence
-          x-cds-type: ASCIIString
         currentBalance:
           type: string
           example: "10000.00"
@@ -1567,7 +1561,7 @@ components:
           description: Array of specific accountIds to obtain data for
           example: 30370f1b-cd27-4d56-b56d-beb49fc9aa48
     QueryAccountIsOwned:
-      name: is-owned
+      name: isOwned
       in: query
       description: Filters accounts based on whether they are owned by the authorised customer.
         True for owned accounts, false for unowned accounts and absent for all accounts
@@ -1576,7 +1570,7 @@ components:
         example: true
         x-cds-type: Boolean
     QueryAccountOpenStatus:
-      name: open-status
+      name: openStatus
       in: query
       description: Used to filter results according to open/closed status. Values can be OPEN, CLOSED
       required: false
@@ -1587,7 +1581,7 @@ components:
           - OPEN
           - CLOSED
     QueryDataHolderIds:
-      name: data-holder-ids
+      name: dataHolderIds
       in: query
       description: Array of strings used to identify the data holders.
       required: false
@@ -1616,7 +1610,7 @@ components:
         minimum: 1
         example: 25
     QueryProductCategory:
-      name: product-category
+      name: productCategories
       in: query
       description: Used to filter results on the productCategory field applicable to accounts.
         Any one of the valid values for this field can be supplied. If absent then all accounts returned.
