@@ -628,6 +628,34 @@ paths:
         429:
           $ref: '#/components/responses/429RateLimited'
       x-version: "3"
+  /adr/common/arrangements/{cdrArrangementId}/userinfo:
+    get:
+      tags:
+        - User Info
+      summary: Get user info under cdr arrangement id
+      description: Obtain the user info exposed by the data holder's identify provider
+      operationId: getUserinfo
+      parameters:
+        - $ref: '#/components/parameters/RequestPathCdrArrangementId'
+      responses:
+        200:
+          description: User info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfoByArrangementId'
+        400:
+          $ref: '#/components/responses/400BadRequest'
+        401:
+          $ref: '#/components/responses/401Unauthorised'
+        403:
+          $ref: '#/components/responses/403Forbidden'
+        404:
+          $ref: '#/components/responses/404NotFound'
+        424:
+          $ref: '#/components/responses/424FailedDependency'
+        429:
+          $ref: '#/components/responses/429RateLimited'
   /adr/common/arrangements/{cdrArrangementId}/customer:
     get:
       tags:
@@ -813,6 +841,117 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    UserInfoByArrangementId:
+      type: object
+      required:
+        - acr
+        - cdrArrangementId
+        - refreshTokenExpiresAt
+        - sharingExpiresAt
+        - sub
+        - name
+        - givenName
+        - familyName
+        - updatedAt
+      properties:
+        acr:
+          type: string
+          example: "urn:cds.au:cdr:2"
+          description: Authentication Context Class Reference. Contain an ordinal LoA value.
+          x-cds-type: ASCIIString
+        cdrArrangementId:
+          type: string
+          example: 979444dc-b692-4974-a194-bde1fc0505ff
+          description: A unique string representing a consent arrangement between a Data Recipient Software Product and Data Holder for a given consumer.
+          x-cds-type: ASCIIString
+        refreshTokenExpiresAt:
+          type: number
+          example: 1654669122
+          description: Indicates the date-time at which the most recently provided refresh token will expire.
+        sharingExpiresAt:
+          type: number
+          example: 1657261122
+          description: Indicates the date-time at which the current sharing arrangement will expire.
+        sub:
+          type: string
+          example: leVC9WDe0yOj31UyOoTr
+          description: Pairwise Pseudonymous Identifier (PPID) for the End-User at the Data Holder.
+          x-cds-type: ASCIIString
+        name:
+          type: string
+          example: "Jane Doe"
+          description: End-User's full name in displayable form including all name parts.
+          x-cds-type: ASCIIString
+        givenName:
+          type: string
+          example: "Jane"
+          description: Given name(s) or first name(s) of the End-User.
+          x-cds-type: ASCIIString
+        familyName:
+          type: string
+          example: "Doe"
+          description: Surname(s) or last name(s) of the End-User.
+          x-cds-type: ASCIIString
+        updatedAt:
+          type: number
+          example: 1654153174
+          description: Time the End-User's information was last updated. Its value is a JSON number representing the number of seconds from 1970-01-01T00:00:00Z to the UTC updatedAt time.
+        email:
+          type: string
+          example: "janedoe@example.com"
+          description: End-User's preferred e-mail address. Its value MUST conform to the [RFC5322] addr-spec syntax. The Data Recipient MUST NOT rely upon this value being unique, as discussed in Section 5.7 of [OIDC]
+        emailVerified:
+          type: boolean
+          example: true
+          description: True if the End-User's e-mail address has been verified; otherwise false. When this Claim Value is true, this means that the Data Holder took affirmative steps to ensure that this e-mail address was controlled by the End-User at the time the verification was performed. The means by which an e-mail address is verified is context-specific, and dependent upon the trust framework or contractual agreements within which the parties are operating.
+          x-cds-type: Boolean
+        phoneNumber:
+          type: string
+          example: "+61449555123"
+          description: End-User's preferred telephone number. [E.164] is RECOMMENDED as the format of this Claim, for example, +1 (425) 555-1212 or +56 (2) 687 2400. If the phone number contains an extension, it is RECOMMENDED that the extension be represented using the [RFC3966] extension syntax, for example, +1 (604) 555-1234;ext=5678.
+          x-cds-type: String
+        phoneNumberVerified:
+          type: boolean
+          example: true
+          description: True if the End-User's phone number has been verified; otherwise false. When this Claim Value is true, this means that the Data Holder took affirmative steps to ensure that this phone number was controlled by the End-User at the time the verification was performed. The means by which a phone number is verified is context- specific, and dependent upon the trust framework or contractual agreements within which the parties are operating. When true, the phone_number Claim MUST be in [E.164] format and any extensions MUST be represented in [RFC3966] format.
+          x-cds-type: Boolean
+        address:
+          $ref: '#/components/schemas/OidcAddress'
+        meta:
+          $ref: '#/components/schemas/Meta'
+    OidcAddress:
+      type: object
+      properties:
+        formatted:
+          type: string
+          example: "2067 Armbrester Drive Sydney NSW 2000 AU"
+          description: "The full mailing address, with multiple lines if necessary. Newlines can be represented either as a \r\n or as a \n."
+          x-cds-type: String
+        streetAddress:
+          type: string
+          example: "2067 Armbrester Drive"
+          description: "The street address component, which may include house number, stree name, post office box, and other multi-line information. Newlines can be represented either as a \r\n or as a \n."
+          x-cds-type: String
+        locality:
+          type: string
+          example: "Sydney"
+          description: "City or locality component."
+          x-cds-type: String
+        region:
+          type: string
+          example: "NSW"
+          description: "State, province, prefecture or region component."
+          x-cds-type: String
+        postalCode:
+          type: string
+          example: "2000"
+          description: "Zip code or postal code component."
+          x-cds-type: String
+        country:
+          type: string
+          example: "AU"
+          description: "Country name component."
+          x-cds-type: String
     RequestAccountIds:
       type: object
       required:
@@ -1627,7 +1766,7 @@ components:
               type: array
               description: Array of features of the account based on the equivalent structure in Product Reference with the following additional field
               items:
-                  $ref: '#/components/schemas/BankingAccountProductFeature'
+                $ref: '#/components/schemas/BankingAccountProductFeature'
             fees:
               type: array
               description: Fees and charges applicable to the account based on the equivalent structure in Product Reference
@@ -3724,6 +3863,8 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ResponseErrorList'
+    424FailedDependency:
+      description: A downstream call to the ADH failed
     429RateLimited:
       description: Ratelimit reached
     GenericError:
