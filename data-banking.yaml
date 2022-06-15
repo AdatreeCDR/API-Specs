@@ -165,44 +165,6 @@ paths:
           $ref: '#/components/responses/403Forbidden'
         429:
           $ref: '#/components/responses/429RateLimited'
-  /data/banking/payments/scheduled:
-    get:
-      security:
-        - bearerAuth: [ 'data:banking:regular_payments:read' ]
-        - m2m: [ 'data:banking:regular_payments:read' ]
-      tags:
-        - Scheduled Payments
-      summary: Get Scheduled Payments
-      description: |-
-        Obtain direct debits with .operationId: getScheduledPayments
-      operationId: getScheduledPayments
-      parameters:
-        - $ref: '#/components/parameters/QueryUseCaseIds'
-        - $ref: '#/components/parameters/QueryCdrArrangementIds'
-        - $ref: '#/components/parameters/QueryConsentIds'
-        - $ref: '#/components/parameters/QueryConsumerIds'
-        - $ref: '#/components/parameters/QueryDataHolderBrandIds'
-        - $ref: '#/components/parameters/QueryAccountIds'
-        - $ref: '#/components/parameters/QueryAccountIsOwned'
-        - $ref: '#/components/parameters/QueryAccountOpenStatus'
-        - $ref: '#/components/parameters/QueryProductCategory'
-        - $ref: '#/components/parameters/QueryPage'
-        - $ref: '#/components/parameters/QueryPageSize'
-      responses:
-        200:
-          description: Success
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/ResponseScheduledPaymentsList'
-        400:
-          $ref: '#/components/responses/400BadRequest'
-        401:
-          $ref: '#/components/responses/401Unauthorised'
-        403:
-          $ref: '#/components/responses/403Forbidden'
-        429:
-          $ref: '#/components/responses/429RateLimited'
 components:
   securitySchemes:
     bearerAuth:
