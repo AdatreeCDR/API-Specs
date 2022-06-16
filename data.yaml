@@ -298,7 +298,7 @@ paths:
   /data/energy/electricity/servicepoints:
     get:
       security:
-        - bearerAuth: [ 'data:energy:electricity:servicepoints:read' ]
+        - bearerAuth: [ 'data:energy:electricity.servicepoints:read' ]
       tags:
         - Energy
       summary: Get Electricity Service Points
@@ -2209,9 +2209,9 @@ components:
       x-conditional:
         - financialInstitution
 
-  #-------------------------------
-  # Energy Schema Definitions
-  #-------------------------------
+    #-------------------------------
+    # Energy Schema Definitions
+    #-------------------------------
 
     EnergyPlanList:
       properties:
@@ -2247,45 +2247,6 @@ components:
           $ref: '#/components/schemas/LinksPaginated'
         meta:
           $ref: '#/components/schemas/MetaPaginated'
-      required:
-        - data
-        - links
-        - meta
-      type: object
-    EnergyConcessions:
-      properties:
-        data:
-          $ref: '#/components/schemas/EnergyConcessions_data'
-        links:
-          $ref: '#/components/schemas/Links'
-        meta:
-          type: object
-      required:
-        - data
-        - links
-        - meta
-      type: object
-    EnergyBalanceList:
-      properties:
-        data:
-          $ref: '#/components/schemas/EnergyBalanceList_data'
-        links:
-          $ref: '#/components/schemas/LinksPaginated'
-        meta:
-          $ref: '#/components/schemas/MetaPaginated'
-      required:
-        - data
-        - links
-        - meta
-      type: object
-    EnergyBalance:
-      properties:
-        data:
-          $ref: '#/components/schemas/EnergyBalance_data'
-        links:
-          $ref: '#/components/schemas/Links'
-        meta:
-          type: object
       required:
         - data
         - links
@@ -3379,8 +3340,6 @@ components:
           items:
             $ref: '#/components/schemas/EnergyDerRecord_acConnections'
           type: array
-        adatree:
-          $ref: '#/components/schemas/Adatree'
       required:
         - acConnections
         - approvedCapacity
@@ -3392,7 +3351,7 @@ components:
       type: object
       x-conditional:
         - protectionMode
-    EnergyAccountBase:
+    EnergyAccountDetail:
       properties:
         accountId:
           description: The ID of the account.  To be created in accordance with CDR
@@ -3412,21 +3371,30 @@ components:
           description: The date that the account was created or opened
           type: string
           x-cds-type: DateString
+        balance:
+          description: The current balance of the account.  A positive value indicates
+            that amount is owing to be paid.  A negative value indicates that the
+            account is in credit
+          type: string
+        plans:
+          description: The array of plans containing service points and associated plan details
+          items:
+            $ref: '#/components/schemas/EnergyAccountDetailPlan'
+          type: array
+        paymentSchedule:
+          $ref: '#/components/schemas/EnergyPaymentSchedule'
+        concessions:
+          description: Array may be empty if no concessions exist
+          items:
+            $ref: '#/components/schemas/EnergyConcession'
+          type: array
         adatree:
           $ref: '#/components/schemas/Adatree'
       required:
         - accountId
         - creationDate
         - adatree
-      type: object
-    EnergyAccount:
-      allOf:
-        - $ref: '#/components/schemas/EnergyAccountBase'
-        - $ref: '#/components/schemas/EnergyAccount_allOf'
-    EnergyAccountDetail:
-      allOf:
-        - $ref: '#/components/schemas/EnergyAccountBase'
-        - $ref: '#/components/schemas/EnergyAccountDetail_allOf'
+        - plans
     EnergyPaymentSchedule:
       properties:
         amount:
@@ -3447,11 +3415,8 @@ components:
           $ref: '#/components/schemas/EnergyPaymentSchedule_directDebit'
         manualPayment:
           $ref: '#/components/schemas/EnergyPaymentSchedule_manualPayment'
-        adatree:
-          $ref: '#/components/schemas/Adatree'
       required:
         - paymentScheduleUType
-        - adatree
       type: object
       x-conditional:
         - cardDebit
@@ -3500,11 +3465,8 @@ components:
             must be provided
           type: string
           x-cds-type: RateString
-        adatree:
-          $ref: '#/components/schemas/Adatree'
       required:
         - displayName
-        - adatree
       type: object
       x-conditional:
         - dailyDiscount
@@ -3951,15 +3913,6 @@ components:
         - amount
         - method
       type: object
-    Links:
-      properties:
-        self:
-          description: Fully qualified link that generated the current response document
-          type: string
-          x-cds-type: URIString
-      required:
-        - self
-      type: object
     EnergyPlanList_data:
       properties:
         plans:
@@ -3988,67 +3941,6 @@ components:
           type: array
       required:
         - reads
-      type: object
-    EnergyDerList_data:
-      properties:
-        derRecords:
-          description: Array of meter reads
-          items:
-            $ref: '#/components/schemas/EnergyDerRecord'
-          type: array
-      required:
-        - derRecords
-      type: object
-    EnergyConcessions_data:
-      properties:
-        concessions:
-          description: Array may be empty if no concessions exist
-          items:
-            $ref: '#/components/schemas/EnergyConcession'
-          type: array
-      required:
-        - concessions
-      type: object
-    EnergyBalanceList_data_balances:
-      properties:
-        accountId:
-          description: The ID of the account
-          type: string
-        balance:
-          description: The current balance of the account.  A positive value indicates
-            that amount is owing to be paid.  A negative value indicates that the
-            account is in credit
-          type: string
-          x-cds-type: AmountString
-        adatree:
-          $ref: '#/components/schemas/Adatree'
-      required:
-        - accountId
-        - balance
-      type: object
-    EnergyBalanceList_data:
-      properties:
-        balances:
-          description: Array of account balances
-          items:
-            $ref: '#/components/schemas/EnergyBalanceList_data_balances'
-          type: array
-      required:
-        - balances
-      type: object
-    EnergyBalance_data:
-      properties:
-        balance:
-          description: The current balance of the account.  A positive value indicates
-            that amount is owing to be paid.  A negative value indicates that the
-            account is in credit
-          type: string
-          x-cds-type: AmountString
-        adatree:
-          $ref: '#/components/schemas/Adatree'
-      required:
-        - balance
-        - adatree
       type: object
     EnergyInvoiceList_data:
       properties:
@@ -4886,7 +4778,7 @@ components:
         - inverterSeries
         - inverterModelNumber
         - inverterDeviceCapacity
-    EnergyAccount_allOf_planOverview:
+    EnergyAccountPlanOverview:
       properties:
         displayName:
           description: The name of the plan if one exists
@@ -4902,39 +4794,7 @@ components:
       required:
         - startDate
       type: object
-    EnergyAccount_allOf_plans:
-      properties:
-        nickname:
-          description: Optional display name for the plan provided by the customer
-            to help differentiate multiple plans
-          type: string
-        servicePointIds:
-          description: An array of servicePointIds, representing NMIs, that this plan
-            is linked to.  If there are no service points allocated to this plan then
-            an empty array would be expected
-          items:
-            type: string
-          type: array
-        planOverview:
-          $ref: '#/components/schemas/EnergyAccount_allOf_planOverview'
-      required:
-        - planOverview
-        - servicePointIds
-      type: object
-    EnergyAccount_allOf:
-      description: The array of plans containing service points and associated plan
-        details
-      properties:
-        plans:
-          description: The array of plans containing service points and associated
-            plan details
-          items:
-            $ref: '#/components/schemas/EnergyAccount_allOf_plans'
-          type: array
-      required:
-        - plans
-      type: object
-    EnergyAccountDetail_allOf_planDetail:
+    EnergyAccountDetailPlanDetail:
       description: Detail on the plan applicable to this account
       properties:
         fuelType:
@@ -4967,7 +4827,7 @@ components:
       x-conditional:
         - gasContract
         - electricityContract
-    EnergyAccountDetail_allOf_authorisedContacts:
+    EnergyAccountDetailAuthorisedContacts:
       properties:
         firstName:
           description: For people with single names this field need not be present.
@@ -4992,7 +4852,7 @@ components:
       required:
         - lastName
       type: object
-    EnergyAccountDetail_allOf_plans:
+    EnergyAccountDetailPlan:
       properties:
         nickname:
           description: Optional display name for the plan provided by the customer
@@ -5005,32 +4865,19 @@ components:
             type: string
           type: array
         planOverview:
-          $ref: '#/components/schemas/EnergyAccount_allOf_planOverview'
+          $ref: '#/components/schemas/EnergyAccountPlanOverview'
         planDetail:
-          $ref: '#/components/schemas/EnergyAccountDetail_allOf_planDetail'
+          $ref: '#/components/schemas/EnergyAccountDetailPlanDetail'
         authorisedContacts:
           description: An array of additional contacts that are authorised to act
             on this account
           items:
-            $ref: '#/components/schemas/EnergyAccountDetail_allOf_authorisedContacts'
+            $ref: '#/components/schemas/EnergyAccountDetailAuthorisedContacts'
           type: array
       required:
         - planDetail
         - planOverview
         - servicePointIds
-      type: object
-    EnergyAccountDetail_allOf:
-      description: The array of plans containing service points and associated plan
-        details
-      properties:
-        plans:
-          description: The array of plans containing service points and associated
-            plan details
-          items:
-            $ref: '#/components/schemas/EnergyAccountDetail_allOf_plans'
-          type: array
-      required:
-        - plans
       type: object
     EnergyPaymentSchedule_cardDebit:
       description: Represents a regular credit card payment schedule. Mandatory if
@@ -5225,18 +5072,7 @@ components:
   #-------------------------------
   parameters:
     #-------------------------------
-    # Path parameters
-    #-------------------------------
-    PathPlanId:
-      description: ID of the specific plan requested
-      in: path
-      name: planId
-      required: true
-      schema:
-        type: string
-
-    #-------------------------------
-    # Path parameters
+    # Query parameters
     #-------------------------------
     QueryAccountIds:
       name: accountIds
@@ -5270,16 +5106,6 @@ components:
         enum:
           - OPEN
           - CLOSED
-    QueryDataHolderIds:
-      name: dataHolderIds
-      in: query
-      description: Array of strings used to identify the data holders.
-      required: false
-      schema:
-        type: array
-        items:
-          type: string
-          example: 55b3299a-3e50-48a2-a190-cca263ccaba5
     QueryPage:
       name: page
       in: query
