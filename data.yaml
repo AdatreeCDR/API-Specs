@@ -130,7 +130,7 @@ paths:
         - bearerAuth: [ 'data:banking:regular_payments:read' ]
       tags:
         - Banking
-      summary: Get Bankig Direct Debits
+      summary: Get Banking Direct Debits
       description: |-
         Obtain the list of banking direct debits that consumers have consented to share across all data holders
       operationId: getBankingDirectDebits
@@ -509,7 +509,7 @@ components:
         nickname:
           type: string
           example: sav
-          description: A customer supplied nick name for the account
+          description: A customer supplied nickname for the account
         openStatus:
           type: string
           example: OPEN
@@ -1152,7 +1152,7 @@ components:
         maximumValue:
           type: number
           example: 3
-          description: 'The number of tierUnitOfMeasure units that form the upper bound of the tier or band. For a tier with a discrete value (as opposed to a range of values e.g. 1 month) this must be the same as tierValueMinimum. Where this is the same as the tierValueMinimum value of the next-higher tier the referenced tier should be exclusive of this value. For example a term deposit of 2 months falls into the upper tier of the following tiers: (1 â€“ 2 months, 2 â€“ 3 months). If absent the tier''s range has no upper bound.'
+          description: 'The number of tierUnitOfMeasure units that form the upper bound of the tier or band. For a tier with a discrete value (as opposed to a range of values e.g. 1 month) this must be the same as tierValueMinimum. Where this is the same as the tierValueMinimum value of the next-higher tier the referenced tier should be exclusive of this value. For example a term deposit of 2 months falls into the upper tier of the following tiers: (1 - 2 months, 2 - 3 months). If absent the tier''s range has no upper bound.'
           x-cds-type: Number
         rateApplicationMethod:
           type: string
@@ -1948,7 +1948,7 @@ components:
             currently displays account identifiers in their existing online banking
             channels. If the contents of the CRN match the format of a Credit Card
             PAN they should be masked according to the rules applicable for MaskedPANString.
-            If the contents are are otherwise sensitive, then it should be masked
+            If the contents are otherwise sensitive, then it should be masked
             using the rules applicable for the MaskedAccountString common type.
           type: string
         billerName:
@@ -2285,7 +2285,7 @@ components:
           type: string
           x-cds-type: ASCIIString
         effectiveFrom:
-          description: The date and time from which this plan is effective (ie. is
+          description: The date and time from which this plan is effective (i.e. is
             available for origination). Used to enable the articulation of products
             to the regime before they are available for customers to originate
           type: string
@@ -2786,12 +2786,12 @@ components:
                         startTime:
                           description: The beginning of the time period per day for
                             which the tariff applies.  If absent assumes start of
-                            day (ie. midnight)
+                            day (i.e. midnight)
                           type: string
                           x-cds-type: TimeString
                         endTime:
                           description: The end of the time period per day for which
-                            the tariff applies.  If absent assumes end of day (ie.
+                            the tariff applies.  If absent assumes end of day (i.e.
                             one second before midnight)
                           type: string
                           x-cds-type: TimeString
@@ -3553,12 +3553,12 @@ components:
           type: string
           x-cds-type: AmountString
         totalOnceOffCharges:
-          description: The aggregate total of any once off charges arising from electricity
+          description: The aggregate total of any once-off charges arising from electricity
             usage for the period covered by the invoice (exclusive of GST)
           type: string
           x-cds-type: AmountString
         totalOnceOffDiscounts:
-          description: The aggregate total of any once off discounts or credits arising
+          description: The aggregate total of any once-off discounts or credits arising
             from electricity usage for the period covered by the invoice (exclusive
             of GST)
           type: string
@@ -3593,12 +3593,12 @@ components:
           type: string
           x-cds-type: AmountString
         totalOnceOffCharges:
-          description: The aggregate total of any once off charges arising from electricity
+          description: The aggregate total of any once-off charges arising from electricity
             usage for the period covered by the invoice (exclusive of GST)
           type: string
           x-cds-type: AmountString
         totalOnceOffDiscounts:
-          description: The aggregate total of any once off discounts or credits arising
+          description: The aggregate total of any once-off discounts or credits arising
             from electricity usage for the period covered by the invoice (exclusive
             of GST)
           type: string
