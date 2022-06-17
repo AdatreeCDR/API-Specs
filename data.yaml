@@ -9,7 +9,7 @@ info:
     email: engineering@adatree.com.au
   version: "1.0.0"
 servers:
-  - url: https://adatree-prod.adatree.com.au
+  - url: https://cdr-insights-prod.api.adatree.com.au
 paths:
   /data/banking/accounts:
     get:
