@@ -412,10 +412,10 @@ paths:
         403:
           $ref: '#/components/responses/403Forbidden'
         429:
-          $ref: '#/components/responses/429RateLimited'          
+          $ref: '#/components/responses/429RateLimited'
   /software-products/{softwareProductId}/data-holders:
     get:
-      summary: Get Data Holders    
+      summary: Get Data Holders
       description: Get the list of available data holders for a software product
       security:
         - bearerAuth: [ 'consumer:data-holders:read', 'data-holders:read' ]
@@ -444,8 +444,8 @@ paths:
                   $ref: '#/components/schemas/DataHolder'
   /tokens:
     post:
-      summary: Create Tokens    
-      description: Send the required parameters from the data holder to the ADR Platform backend to finish extablishing data access    
+      summary: Create Tokens
+      description: Send the required parameters from the data holder to the ADR Platform backend to finish extablishing data access
       security:
         - bearerAuth: [ 'consumer:tokens:write', 'consumer_tokens_write', 'tokens:write', 'tokens_write' ]
         - m2m: [ 'tokens:write' ]
@@ -701,6 +701,9 @@ components:
         dataHolderBrandId:
           type: string
           example: f632041c-d7c8-4679-a165-aa406cd62b13
+        dataHolderLogoUri:
+          type: string
+          example: https://www.abank.com.au/logo
         useCase:
           $ref: '#/components/schemas/UseCaseResponse'
         postUsageAction:
@@ -863,7 +866,7 @@ components:
         links:
           $ref: '#/components/schemas/LinksPaginated'
         meta:
-          $ref: '#/components/schemas/MetaPaginated'  
+          $ref: '#/components/schemas/MetaPaginated'
     UseCaseResponse:
       type: object
       properties:
