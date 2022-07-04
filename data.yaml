@@ -5152,7 +5152,7 @@ components:
     QueryPageSize:
       name: pageSize
       in: query
-      description: Page size to request. Default is 25 (standard pagination)
+      description: Page size to request
       schema:
         type: integer
         minimum: 1
