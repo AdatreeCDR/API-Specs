@@ -3436,7 +3436,6 @@ components:
         displayName: displayName
         appliedTo:
           - INVOICE
-          - INVOICE
         percentage: percentage
         additionalInfo: additionalInfo
         type: FIXED_AMOUNT
