@@ -908,6 +908,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UseCaseDataHolder'
+        industries:
+          type: array
+          description: list of industries this use-case applies to.
+          items:
+            $ref: '#/components/schemas/Industry'
+        consumerType:
+          $ref: '#/components/schemas/ConsumerType'
+        osps:
+          type: array
+          description: list of OSPs used to provide this use case.
+          items:
+            $ref: '#/components/schemas/OutsourcedServiceProvider'
     ResponseErrorList:
       type: object
       required:
@@ -984,6 +996,44 @@ components:
         - ONE_YEAR
         - CUSTOM
         - ONCE_OFF
+    ConsumerType:
+      type: string
+      description: |
+        consumer types that will be consenting to the various scopes (data clusters)
+      example: INDIVIDUAL
+      enum:
+        - ALL
+        - INDIVIDUAL
+        - ORGANISATION
+        - ANY
+    Industry:
+      type: string
+      example: ACTIVE
+      enum:
+        - BANKING
+        - ENERGY
+    OutsourcedServiceProvider:
+      required:
+        - providerName
+        - serviceDescription
+      type: object
+      properties:
+        providerName:
+          type: string
+          description: The consumer facing name of the service provider.
+          example: Adatree
+        serviceDescription:
+          type: string
+          description: The consumer facing description of what the service provider does as part of supporting the use case.
+          example: Adatree's Data Recipient Platform is a turnkey SaaS solution providing CDR as a Service.
+        accreditationId:
+          type: string
+          description: The ACCC issued Accreditation ID if applicable. Normally only applied to OSPs for data collection e.g. Adatree.
+          example: ADRBNK000071
+        cdrPolicyUri:
+          type: string
+          description: The logo URI of the data holder you wish the consumer to authenticate with.
+          example: https://adatree.com.au/cdr-policy
   #-------------------------------
   # Reusable responses
   #-------------------------------
