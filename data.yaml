@@ -5409,23 +5409,23 @@ components:
           type: string
           description: Array of specific planIds to filter the result list by
     HeaderConsumerAuthDate:
-      name: Consumer-Auth-Date
+      name: Adatree-Consumer-Auth-Date
       in: header
-      description: The time when the customer last logged in.
+      description: The time when the customer last logged in. Mandatory for consumer present calls using a Machine token.
       schema:
         type: string
         example: 'Tue, 11 Sep 2012 19:43:31 GMT'
     HeaderConsumerIpAddress:
-      name: Consumer-Ip-Address
+      name: Adatree-Consumer-Ip-Address
       in: header
-      description: The consumer's original IP address. Mandatory for customer present calls.
+      description: The consumer's original IP address. Mandatory for consumer present calls using a Machine token.
       schema:
         type: string
         example: 127.0.0.1
     HeaderUserAgent:
-      name: User-Agent
+      name: Adatree-Consumer-User-Agent
       in: header
-      description: Consumer User Agent. Mandatory for customer present calls.
+      description: User Agent header of the consumer facing application. Mandatory for consumer present calls using a Machine token.
       schema:
         type: string
   #-------------------------------
