@@ -4060,6 +4060,7 @@ components:
           type: string
           enum:
             - BALANCE_REFRESH_ERROR
+            - THROTTLED_BY_DATA_HOLDER_ERROR
         title:
           description: A short, human-readable summary of the problem.
           type: string
@@ -4069,6 +4070,9 @@ components:
           type: string
         cdrArrangementId:
           description: CDR arrangement id where data fetch error occurred
+          type: string
+        retryAfter:
+          description: "'Retry-After' value if error code is 'THROTTLED_BY_DATA_HOLDER_ERROR', which can either be a http-date or delay in seconds, as provided by data holder. Please note this value is not always provided by data holders, in which case this field will be null."
           type: string
       required:
         - code
@@ -5453,3 +5457,4 @@ components:
           schema:
             type: string
             example: something went wrong
+
