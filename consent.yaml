@@ -73,7 +73,6 @@ paths:
           description: UseCase ids
           in: query
           required: false
-          example: [HOME_LOAN]
           schema:
             type: array
             items:
