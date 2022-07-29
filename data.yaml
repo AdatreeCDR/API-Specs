@@ -127,6 +127,80 @@ paths:
           $ref: '#/components/responses/403Forbidden'
         429:
           $ref: '#/components/responses/429RateLimited'
+  /data/banking/direct-debits:
+    get:
+      security:
+        - bearerAuth: [ 'data:banking:regular_payments:read' ]
+      tags:
+        - Banking
+      summary: Get Banking Direct Debits
+      description: |-
+        Obtain the list of banking direct debits that consumers have consented to share across all data holders
+      operationId: getBankingDirectDebits
+      parameters:
+        - $ref: '#/components/parameters/QueryUseCaseIds'
+        - $ref: '#/components/parameters/QueryCdrArrangementIds'
+        - $ref: '#/components/parameters/QueryConsentIds'
+        - $ref: '#/components/parameters/QueryConsumerIds'
+        - $ref: '#/components/parameters/QueryDataHolderBrandIds'
+        - $ref: '#/components/parameters/QueryAccountIds'
+        - $ref: '#/components/parameters/QueryAccountIsOwned'
+        - $ref: '#/components/parameters/QueryAccountOpenStatus'
+        - $ref: '#/components/parameters/QueryProductCategory'
+        - $ref: '#/components/parameters/QueryPage'
+        - $ref: '#/components/parameters/QueryPageSize'
+      responses:
+        200:
+          description: Success
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/BankingDirectDebitAuthorisationList'
+        400:
+          $ref: '#/components/responses/400BadRequest'
+        401:
+          $ref: '#/components/responses/401Unauthorised'
+        403:
+          $ref: '#/components/responses/403Forbidden'
+        429:
+          $ref: '#/components/responses/429RateLimited'
+  /data/banking/payments/scheduled:
+    get:
+      security:
+        - bearerAuth: [ 'data:banking:regular_payments:read' ]
+      tags:
+        - Banking
+      summary: Get Scheduled Payments
+      description: |-
+        Obtain the list of banking scheduled payments that consumers have consented to share across all data holders
+      operationId: getScheduledPayments
+      parameters:
+        - $ref: '#/components/parameters/QueryUseCaseIds'
+        - $ref: '#/components/parameters/QueryCdrArrangementIds'
+        - $ref: '#/components/parameters/QueryConsentIds'
+        - $ref: '#/components/parameters/QueryConsumerIds'
+        - $ref: '#/components/parameters/QueryDataHolderBrandIds'
+        - $ref: '#/components/parameters/QueryAccountIds'
+        - $ref: '#/components/parameters/QueryAccountIsOwned'
+        - $ref: '#/components/parameters/QueryAccountOpenStatus'
+        - $ref: '#/components/parameters/QueryProductCategory'
+        - $ref: '#/components/parameters/QueryPage'
+        - $ref: '#/components/parameters/QueryPageSize'
+      responses:
+        200:
+          description: Success
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/BankingScheduledPaymentsList'
+        400:
+          $ref: '#/components/responses/400BadRequest'
+        401:
+          $ref: '#/components/responses/401Unauthorised'
+        403:
+          $ref: '#/components/responses/403Forbidden'
+        429:
+          $ref: '#/components/responses/429RateLimited'
   /data/energy/plans:
     get:
       security:
@@ -392,6 +466,19 @@ components:
         - links
         - meta
       type: object
+    BankingScheduledPaymentsList:
+      type: object
+      required:
+        - data
+        - links
+        - meta
+      properties:
+        data:
+          $ref: '#/components/schemas/BankingScheduledPaymentsList_data'
+        links:
+          $ref: '#/components/schemas/LinksPaginated'
+        meta:
+          $ref: '#/components/schemas/MetaPaginated'
     BankingAccountList_data:
       required:
         - accounts
@@ -419,8 +506,263 @@ components:
           items:
             $ref: '#/components/schemas/BankingDirectDebit'
           type: array
-
-
+    BankingScheduledPaymentsList_data:
+      required:
+        - scheduledPayments
+      properties:
+        scheduledPayments:
+          type: array
+          description: The list of scheduled payments to return
+          items:
+            $ref: '#/components/schemas/BankingScheduledPayment'
+    BankingScheduledPayment:
+      type: object
+      required:
+        - from
+        - payeeReference
+        - payerReference
+        - paymentSet
+        - recurrence
+        - scheduledPaymentId
+        - status
+        - adatree
+      properties:
+        scheduledPaymentId:
+          type: string
+          description: A unique ID of the scheduled payment adhering to the standards for ID permanence
+          example: f632041c-d7c8-4679-a165-aa406cd62b13
+        nickname:
+          type: string
+          example: council
+          description: The short display name of the payee as provided by the customer
+        payerReference:
+          type: string
+          example: 1231234142
+          description: The reference for the transaction that will be used by the originating institution for the purposes of constructing a statement narrative on the payer's account. Empty string if no data provided
+        payeeReference:
+          type: string
+          example: 234134241234
+          description: The reference for the transaction that will be provided by the originating institution. Empty string if no data provided
+        status:
+          type: string
+          example: ACTIVE
+          description: Indicates whether the schedule is currently active. The value SKIP is equivalent to ACTIVE except that the customer has requested the next normal occurrence to be skipped.
+          enum:
+            - ACTIVE
+            - INACTIVE
+            - SKIP
+        from:
+          $ref: '#/components/schemas/BankingScheduledPaymentFrom'
+        paymentSet:
+          type: array
+          items:
+            $ref: '#/components/schemas/BankingScheduledPaymentSet'
+        recurrence:
+          $ref: '#/components/schemas/BankingScheduledPaymentRecurrence'
+        adatree:
+          $ref: '#/components/schemas/Adatree'
+    BankingScheduledPaymentSet:
+      required:
+        - to
+      properties:
+        to:
+          $ref: '#/components/schemas/BankingScheduledPaymentTo'
+        isAmountCalculated:
+          type: boolean
+          example: true
+          description: Flag indicating whether the amount of the payment is calculated based on the context of the event. For instance a payment to reduce the balance of a credit card to zero. If absent then false is assumed
+        amount:
+          type: string
+          example: 123.00
+          description: The amount of the next payment if known. Mandatory unless the isAmountCalculated field is set to true. Must be zero or positive if present
+        currency:
+          type: string
+          example: AUD
+          description: The currency for the payment. AUD assumed if not present
+      description: The set of payment amounts and destination accounts for this payment accommodating multi-part payments. A single entry indicates a simple payment with one destination account. Must have at least one entry
+      x-conditional:
+        - amount
+    BankingScheduledPaymentTo:
+      type: object
+      required:
+        - toUType
+      properties:
+        toUType:
+          type: string
+          description: The type of object provided that specifies the destination of the funds for the payment.
+          example: payeeId
+          enum:
+            - accountId
+            - payeeId
+            - domestic
+            - biller
+            - international
+        accountId:
+          type: string
+          example: ""
+          description: Present if toUType is set to accountId. Indicates that the payment is to another account that is accessible under the current consent
+        payeeId:
+          type: string
+          example: f632041c-d7c8-4679-a165-aa406cd62b13
+          description: Present if toUType is set to payeeId. Indicates that the payment is to registered payee that can be accessed using the payee end point. If the Bank Payees scope has not been consented to then a payeeId should not be provided and the full payee details should be provided instead
+        domestic:
+          $ref: '#/components/schemas/BankingDomesticPayee'
+        biller:
+          $ref: '#/components/schemas/BankingBillerPayee'
+        international:
+          $ref: '#/components/schemas/BankingInternationalPayee'
+      description: Object containing details of the destination of the payment. Used to specify a variety of payment destination types
+      x-conditional:
+        - accountId
+        - payeeId
+        - domestic
+        - biller
+        - international
+    BankingScheduledPaymentFrom:
+      type: object
+      required:
+        - accountId
+      properties:
+        accountId:
+          type: string
+          example: f632041c-d7c8-4679-a165-aa406cd62b13
+          description: ID of the account that is the source of funds for the payment
+      description: Object containing details of the source of the payment. Currently only specifies an account ID but provided as an object to facilitate future extensibility and consistency with the to object
+    BankingScheduledPaymentRecurrence:
+      type: object
+      required:
+        - recurrenceUType
+      properties:
+        nextPaymentDate:
+          type: string
+          example: "2017-12-31"
+          description: The date of the next payment under the recurrence schedule
+        recurrenceUType:
+          type: string
+          description: The type of recurrence used to define the schedule
+          example: onceOff
+          enum:
+            - onceOff
+            - intervalSchedule
+            - lastWeekDay
+            - eventBased
+        onceOff:
+          $ref: '#/components/schemas/BankingScheduledPaymentRecurrenceOnceOff'
+        intervalSchedule:
+          $ref: '#/components/schemas/BankingScheduledPaymentRecurrenceIntervalSchedule'
+        lastWeekDay:
+          $ref: '#/components/schemas/BankingScheduledPaymentRecurrenceLastWeekday'
+        eventBased:
+          $ref: '#/components/schemas/BankingScheduledPaymentRecurrenceEventBased'
+      description: Object containing the detail of the schedule for the payment
+      x-conditional:
+        - onceOff
+        - intervalSchedule
+        - lastWeekDay
+        - eventBased
+    BankingScheduledPaymentRecurrenceOnceOff:
+      type: object
+      required:
+        - paymentDate
+      properties:
+        paymentDate:
+          type: string
+          example: "2017-12-31"
+          description: The scheduled date for the once off payment
+      description: Indicates that the payment is a once off payment on a specific future date. Mandatory if recurrenceUType is set to onceOff
+    BankingScheduledPaymentRecurrenceIntervalSchedule:
+      type: object
+      required:
+        - intervals
+      properties:
+        finalPaymentDate:
+          type: string
+          example: "2017-12-31"
+          description: The limit date after which no more payments should be made using this schedule. If both finalPaymentDate and paymentsRemaining are present then payments will stop according to the most constraining value. If neither field is present the payments will continue indefinitely
+        paymentsRemaining:
+          type: integer
+          example: 12
+          description: Indicates the number of payments remaining in the schedule. If both finalPaymentDate and paymentsRemaining are present then payments will stop according to the most constraining value, If neither field is present the payments will continue indefinitely
+        nonBusinessDayTreatment:
+          type: string
+          example: AFTER
+          description: Enumerated field giving the treatment where a scheduled payment date is not a business day. If absent assumed to be ON.<br/>**AFTER** - If a scheduled payment date is a non-business day the payment will be made on the first business day after the scheduled payment date.<br/>**BEFORE** - If a scheduled payment date is a non-business day the payment will be made on the first business day before the scheduled payment date.<br/>**ON** - If a scheduled payment date is a non-business day the payment will be made on that day regardless.<br/>**ONLY** - Payments only occur on business days. If a scheduled payment date is a non-business day the payment will be ignored
+          default: 'ON'
+          enum:
+            - 'AFTER'
+            - 'BEFORE'
+            - 'ON'
+            - 'ONLY'
+        intervals:
+          type: array
+          description: An array of interval objects defining the payment schedule.  Each entry in the array is additive, in that it adds payments to the overall payment schedule.  If multiple intervals result in a payment on the same day then only one payment will be made. Must have at least one entry
+          items:
+            $ref: '#/components/schemas/BankingScheduledPaymentInterval'
+      description: Indicates that the schedule of payments is defined by a series of intervals. Mandatory if recurrenceUType is set to intervalSchedule
+    BankingScheduledPaymentInterval:
+      type: object
+      required:
+        - interval
+      properties:
+        interval:
+          type: string
+          example: P1D
+          description: An interval for the payment. Formatted according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations)  (excludes recurrence syntax) with components less than a day in length ignored. This duration defines the period between payments starting with nextPaymentDate
+        dayInInterval:
+          type: string
+          example: ""
+          description: Uses an interval to define the ordinal day within the interval defined by the interval field on which the payment occurs. If the resulting duration is 0 days in length or larger than the number of days in the interval then the payment will occur on the last day of the interval. A duration of 1 day indicates the first day of the interval. If absent the assumed value is P1D. Formatted according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations) (excludes recurrence syntax) with components less than a day in length ignored. The first day of a week is considered to be Monday.
+    BankingScheduledPaymentRecurrenceLastWeekday:
+      type: object
+      required:
+        - interval
+        - lastWeekDay
+      properties:
+        finalPaymentDate:
+          type: string
+          example: "2017-12-31"
+          description: The limit date after which no more payments should be made using this schedule. If both finalPaymentDate and paymentsRemaining are present then payments will stop according to the most constraining value. If neither field is present the payments will continue indefinitely
+        paymentsRemaining:
+          type: integer
+          description: Indicates the number of payments remaining in the schedule. If both finalPaymentDate and paymentsRemaining are present then payments will stop according to the most constraining value. If neither field is present the payments will continue indefinitely
+          example: 12
+        interval:
+          type: string
+          description: The interval for the payment. Formatted according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations) (excludes recurrence syntax) with components less than a day in length ignored. This duration defines the period between payments starting with nextPaymentDate
+          example: P1D
+        lastWeekDay:
+          type: string
+          example: MON
+          description: The weekDay specified. The payment will occur on the last occurrence of this weekday in the interval.
+          enum:
+            - MON
+            - TUE
+            - WED
+            - THU
+            - FRI
+            - SAT
+            - SUN
+        nonBusinessDayTreatment:
+          type: string
+          description: Enumerated field giving the treatment where a scheduled payment date is not a business day. If absent assumed to be ON.<br/>**AFTER** - If a scheduled payment date is a non-business day the payment will be made on the first business day after the scheduled payment date.<br/>**BEFORE** - If a scheduled payment date is a non-business day the payment will be made on the first business day before the scheduled payment date.<br/>**ON** - If a scheduled payment date is a non-business day the payment will be made on that day regardless.<br/>**ONLY** - Payments only occur on business days. If a scheduled payment date is a non-business day the payment will be ignored
+          example: AFTER
+          default: 'ON'
+          enum:
+            - 'AFTER'
+            - 'BEFORE'
+            - 'ON'
+            - 'ONLY'
+      description: Indicates that the schedule of payments is defined according to the last occurrence of a specific weekday in an interval. Mandatory if recurrenceUType is set to lastWeekDay
+    BankingScheduledPaymentRecurrenceEventBased:
+      type: object
+      required:
+        - description
+      properties:
+        description:
+          type: string
+          example: pay every Thursday
+          description: Description of the event and conditions that will result in the payment. Expected to be formatted for display to a customer
+      description: Indicates that the schedule of payments is defined according to an external event that cannot be predetermined. Mandatory if recurrenceUType is set to eventBased
     #-------------------------------
     # Energy Response Schema Definitions
     #-------------------------------
@@ -463,12 +805,10 @@ components:
           type: string
           example: d9e75179-104f-47cf-9d29-18284222bab0
           description: A unique ID of the account adhering to the standards for ID permanence
-          x-cds-type: ASCIIString
         creationDate:
           type: string
           example: "2012-12-25"
           description: Date that the account was created (if known)
-          x-cds-type: DateString
         displayName:
           type: string
           example: savings
@@ -490,12 +830,10 @@ components:
           example: true
           description: Flag indicating that the customer associated with the authorisation is an owner of the account. Does not indicate sole ownership, however. If not present then 'true' is assumed
           default: true
-          x-cds-type: Boolean
         maskedNumber:
           type: string
           example: "xxx-xxx xxxxx1234"
           description: A masked version of the account. Whether BSB/Account Number, Credit Card PAN or another number
-          x-cds-type: MaskedAccountString
         productCategory:
           $ref: '#/components/schemas/BankingProductCategory'
         productName:
@@ -541,12 +879,10 @@ components:
               type: string
               example: 2.20
               description: current rate to calculate interest earned being applied to deposit balances as it stands at the time of the API call
-              x-cds-type: RateString
             lendingRate:
               type: string
               example: 3.19
               description: The current rate to calculate interest payable being applied to lending balances as it stands at the time of the API call
-              x-cds-type: RateString
             depositRates:
               type: array
               description: Fully described deposit rates for this account based on the equivalent structure in Product Reference
@@ -590,7 +926,6 @@ components:
               description: True if the feature is already activated and false if the feature is available for activation. Defaults to true if absent. (note this is an additional field appended to the feature object defined in the Product Reference payload)
               default: true
               example: true
-              x-cds-type: Boolean
     BankingTermDepositAccount:
       type: object
       required:
@@ -602,22 +937,18 @@ components:
           type: string
           example: "2017-12-31"
           description: The lodgement date of the original deposit
-          x-cds-type: DateString
         maturityDate:
           type: string
           example: "2018-12-30"
           description: Maturity date for the term deposit
-          x-cds-type: DateString
         maturityAmount:
           type: string
           example: "10000.00"
           description: Amount to be paid upon maturity. If absent it implies the amount to paid is variable and cannot currently be calculated
-          x-cds-type: AmountString
         maturityCurrency:
           type: string
           example: AUD
           description: If absent assumes AUD
-          x-cds-type: CurrencyString
         maturityInstructions:
           type: string
           example: ROLLED_OVER
@@ -637,22 +968,18 @@ components:
           type: string
           example: 99.99
           description: The minimum payment amount due for the next card payment
-          x-cds-type: AmountString
         paymentDueAmount:
           type: string
           example: 2999.99
           description: The amount due for the next card payment
-          x-cds-type: AmountString
         paymentCurrency:
           type: string
           example: AUD
           description: If absent assumes AUD
-          x-cds-type: CurrencyString
         paymentDueDate:
           type: string
           example: "2021-01-01"
           description: Date that the next payment for the card is due
-          x-cds-type: DateString
     BankingLoanAccount:
       type: object
       required:
@@ -664,69 +991,56 @@ components:
           type: string
           example: "2017-12-31"
           description: Optional original start date for the loan
-          x-cds-type: DateString
         originalLoanAmount:
           type: string
           example: 300000.00
           description: Optional original loan value
-          x-cds-type: AmountString
         originalLoanCurrency:
           type: string
           example: AUD
           description: If absent assumes AUD
-          x-cds-type: CurrencyString
         loanEndDate:
           type: string
           example: "2047-12-30"
           description: Date that the loan is due to be repaid in full
-          x-cds-type: DateString
         nextInstalmentDate:
           type: string
           example: "2021-02-28"
           description: Next date that an instalment is required
-          x-cds-type: DateString
         minInstalmentAmount:
           type: string
           example: 999.99
           description: Minimum amount of next instalment
-          x-cds-type: AmountString
         minInstalmentCurrency:
           type: string
           example: AUD
           description: If absent assumes AUD
-          x-cds-type: CurrencyString
         maxRedraw:
           type: string
           example: 9999.99
           description: Maximum amount of funds that can be redrawn. If not present redraw is not available even if the feature exists for the account
-          x-cds-type: AmountString
         maxRedrawCurrency:
           type: string
           example: AUD
           description: If absent assumes AUD
-          x-cds-type: CurrencyString
         minRedraw:
           type: string
           example: 1000
           description: Minimum redraw amount
-          x-cds-type: AmountString
         minRedrawCurrency:
           type: string
           example: AUD
           description: If absent assumes AUD
-          x-cds-type: CurrencyString
         offsetAccountEnabled:
           type: boolean
           example: true
           description: Set to true if one or more offset accounts are configured for this loan account
-          x-cds-type: Boolean
         offsetAccountIds:
           type: array
           description: The accountIDs of the configured offset accounts attached to this loan. Only offset accounts that can be accessed under the current authorisation should be included. It is expected behaviour that offsetAccountEnabled is set to true but the offsetAccountIds field is absent or empty. This represents a situation where an offset account exists but details can not be accessed under the current authorisation
           items:
             example: ["f632041c-d7c8-4679-a165-aa406cd62b13"]
             type: string
-            x-cds-type: ASCIIString
         repaymentType:
           type: string
           description: Options in place for repayments. If absent defaults to PRINCIPAL_AND_INTEREST
@@ -739,7 +1053,6 @@ components:
           type: string
           example: P1M
           description: The expected or required repayment frequency. Formatted according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations) (excludes recurrence syntax)
-          x-cds-type: ExternalRef
     BankingBalance:
       type: object
       required:
@@ -750,27 +1063,22 @@ components:
           type: string
           example: "10000.00"
           description: The balance of the account at this time. Should align to the balance available via other channels such as Internet Banking. Assumed to be negative if the customer has money owing
-          x-cds-type: AmountString
         availableBalance:
           type: string
           example: "10000.00"
           description: Balance representing the amount of funds available for transfer. Assumed to be zero or positive
-          x-cds-type: AmountString
         creditLimit:
           type: string
           example: "10000.00"
           description: Object representing the maximum amount of credit that is available for this account. Assumed to be zero if absent
-          x-cds-type: AmountString
         amortisedLimit:
           type: string
           example: "0.00"
           description: Object representing the available limit amortised according to payment schedule. Assumed to be zero if absent
-          x-cds-type: AmountString
         currency:
           type: string
           example: AUD
           description: The currency for the balance amounts. If absent assumed to be AUD
-          x-cds-type: CurrencyString
         purses:
           type: array
           description: Optional array of balances for the account in other currencies. Included to support accounts that support multi-currency purses such as Travel Cards
@@ -779,7 +1087,6 @@ components:
         refreshDateTime:
           type: string
           description: Most recent refresh date time stamp
-          x-cds-type: DateTimeString
     BankingBalancePurse:
       type: object
       required:
@@ -789,12 +1096,10 @@ components:
           type: string
           example: "1000.00"
           description: The balance available for this additional currency purse
-          x-cds-type: AmountString
         currency:
           type: string
           example: AUD
           description: The currency for the purse
-          x-cds-type: CurrencyString
     BankingProductCategory:
       type: string
       description: The category to which a product or account belongs. See [here](#product-categories) for more details
@@ -834,17 +1139,14 @@ components:
           type: string
           example: 2.50
           description: The rate to be applied
-          x-cds-type: RateString
         calculationFrequency:
           type: string
           example: P1M
           description: The period after which the rate is applied to the balance to calculate the amount due for the period. Calculation of the amount is often daily (as balances may change) but accumulated until the total amount is 'applied' to the account (see applicationFrequency). Formatted according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations) (excludes recurrence syntax)
-          x-cds-type: ExternalRef
         applicationFrequency:
           type: string
           example: P1M
           description: The period after which the calculated amount(s) (see calculationFrequency) are 'applied' (i.e. debited or credited) to the account. Formatted according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations) (excludes recurrence syntax)
-          x-cds-type: ExternalRef
         tiers:
           type: array
           description: Rate tiers applicable for this rate
@@ -862,7 +1164,6 @@ components:
           type: string
           example: https://depositrate.example.com.au
           description: Link to a web page with more information on this rate
-          x-cds-type: URIString
       x-conditional:
         - additionalValue
     BankingProductLendingRateV2:
@@ -891,22 +1192,18 @@ components:
           type: string
           example: 3.99
           description: The rate to be applied
-          x-cds-type: RateString
         comparisonRate:
           type: string
           example: 4.99
           description: A comparison rate equivalent for this rate
-          x-cds-type: RateString
         calculationFrequency:
           type: string
           example: P1M
           description: The period after which the rate is applied to the balance to calculate the amount due for the period. Calculation of the amount is often daily (as balances may change) but accumulated until the total amount is 'applied' to the account (see applicationFrequency). Formatted according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations) (excludes recurrence syntax)
-          x-cds-type: ExternalRef
         applicationFrequency:
           type: string
           example: P1M
           description: The period after which the calculated amount(s) (see calculationFrequency) are 'applied' (i.e. debited or credited) to the account. Formatted according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations) (excludes recurrence syntax)
-          x-cds-type: ExternalRef
         interestPaymentDue:
           type: string
           example: IN_ARREARS
@@ -945,7 +1242,6 @@ components:
           type: string
           example: https://lendingrate.example.com.au
           description: Link to a web page with more information on this rate
-          x-cds-type: URIString
       x-conditional:
         - additionalValue
     BankingProductFee:
@@ -976,33 +1272,27 @@ components:
         amount:
           type: string
           description: The amount charged for the fee. One of amount, balanceRate, transactionRate and accruedRate is mandatory unless the *feeType* "VARIABLE" is supplied
-          x-cds-type: AmountString
           example: 4.00
         balanceRate:
           type: string
           description: A fee rate calculated based on a proportion of the balance. One of amount, balanceRate, transactionRate and accruedRate is mandatory unless the *feeType* "VARIABLE" is supplied.
           example: 3.99
-          x-cds-type: RateString
         transactionRate:
           type: string
           description: A fee rate calculated based on a proportion of a transaction. One of amount, balanceRate, transactionRate and accruedRate is mandatory unless the *feeType* "VARIABLE" is supplied
           example: 0.02
-          x-cds-type: RateString
         accruedRate:
           type: string
           description: A fee rate calculated based on a proportion of the calculated interest accrued on the account. One of amount, balanceRate, transactionRate and accruedRate is mandatory unless the *feeType* "VARIABLE" is supplied
           example: 0.00
-          x-cds-type: RateString
         accrualFrequency:
           type: string
           description: The indicative frequency with which the fee is calculated on the account. Only applies if balanceRate or accruedRate is also present. Formatted according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations) (excludes recurrence syntax)
-          x-cds-type: ExternalRef
           example: P1M
         currency:
           type: string
           description: The currency the fee will be charged in. Assumes AUD if absent
           example: AUD
-          x-cds-type: CurrencyString
         additionalValue:
           type: string
           description: Generic field containing additional information relevant to the [feeType](#tocSproductfeetypedoc) specified. Whether mandatory or not is dependent on the value of [feeType](#tocSproductfeetypedoc)
@@ -1015,7 +1305,6 @@ components:
           type: string
           description: Link to a web page with more information on this fee
           example: https://bankfee.example.com.au
-          x-cds-type: URIString
         discounts:
           type: array
           description: An optional list of discounts to this fee that may be available
@@ -1091,7 +1380,6 @@ components:
           type: string
           description: Link to a web page with more information on this feature
           example: https://productfeature.example.com.au
-          x-cds-type: URIString
       x-conditional:
         - additionalValue
         - additionalInfo
@@ -1119,12 +1407,10 @@ components:
           type: number
           example: 1
           description: The number of tierUnitOfMeasure units that form the lower bound of the tier. The tier should be inclusive of this value
-          x-cds-type: Number
         maximumValue:
           type: number
           example: 3
           description: 'The number of tierUnitOfMeasure units that form the upper bound of the tier or band. For a tier with a discrete value (as opposed to a range of values e.g. 1 month) this must be the same as tierValueMinimum. Where this is the same as the tierValueMinimum value of the next-higher tier the referenced tier should be exclusive of this value. For example a term deposit of 2 months falls into the upper tier of the following tiers: (1 - 2 months, 2 - 3 months). If absent the tier''s range has no upper bound.'
-          x-cds-type: Number
         rateApplicationMethod:
           type: string
           description: The method used to calculate the amount to be applied using one or more tiers. A single rate may be applied to the entire balance or each applicable tier rate is applied to the portion of the balance that falls into that tier (referred to as 'bands' or 'steps')
@@ -1142,7 +1428,6 @@ components:
           type: string
           example: https://tier.example.com.au
           description: Link to a web page with more information on this rate tier
-          x-cds-type: URIString
       description: Defines the criteria and conditions for which a rate applies
     BankingProductDiscount:
       type: object
@@ -1168,27 +1453,22 @@ components:
           type: string
           example: 10.00
           description: Dollar value of the discount. One of amount, balanceRate, transactionRate, accruedRate and feeRate is mandatory.
-          x-cds-type: AmountString
         balanceRate:
           type: string
           example: 0.05
           description: A discount rate calculated based on a proportion of the balance. Note that the currency of the fee discount is expected to be the same as the currency of the fee itself. One of amount, balanceRate, transactionRate, accruedRate and feeRate is mandatory. Unless noted in additionalInfo, assumes the application and calculation frequency are the same as the corresponding fee
-          x-cds-type: RateString
         transactionRate:
           type: string
           example: 0.05
           description: A discount rate calculated based on a proportion of a transaction. Note that the currency of the fee discount is expected to be the same as the currency of the fee itself. One of amount, balanceRate, transactionRate, accruedRate and feeRate is mandatory
-          x-cds-type: RateString
         accruedRate:
           type: string
           example: 0.05
           description: A discount rate calculated based on a proportion of the calculated interest accrued on the account. Note that the currency of the fee discount is expected to be the same as the currency of the fee itself. One of amount, balanceRate, transactionRate, accruedRate and feeRate is mandatory. Unless noted in additionalInfo, assumes the application and calculation frequency are the same as the corresponding fee
-          x-cds-type: RateString
         feeRate:
           type: string
           example: 0.05
           description: A discount rate calculated based on a proportion of the fee to which this discount is attached. Note that the currency of the fee discount is expected to be the same as the currency of the fee itself. One of amount, balanceRate, transactionRate, accruedRate and feeRate is mandatory. Unless noted in additionalInfo, assumes the application and calculation frequency are the same as the corresponding fee
-          x-cds-type: RateString
         additionalValue:
           type: string
           example: extra discount
@@ -1201,7 +1481,6 @@ components:
           type: string
           example: https://productdiscount.example.com.au
           description: Link to a web page with more information on this discount
-          x-cds-type: URIString
         eligibility:
           type: array
           description: Eligibility constraints that apply to this discount. Mandatory if ``discountType`` is ``ELIGIBILITY_ONLY``.
@@ -1255,7 +1534,6 @@ components:
           description: A valid [ISO 3166 Alpha-3](https://www.iso.org/iso-3166-country-codes.html) country code. Australia (AUS) is assumed if country is not present.
           example: AUS
           default: AUS
-          x-cds-type: ExternalRef
       x-conditional:
         - postcode
     CommonPAFAddress:
@@ -1273,7 +1551,6 @@ components:
           type: integer
           description: Thoroughfare number for a property (first number in a property ranged address)
           example: 16
-          x-cds-type: PositiveInteger
         thoroughfareNumber1Suffix:
           type: string
           description: Suffix for the thoroughfare number. Only relevant is thoroughfareNumber1 is populated
@@ -1282,7 +1559,6 @@ components:
           type: integer
           description: Second thoroughfare number (only used if the property has a ranged address eg 23-25)
           example: 19
-          x-cds-type: PositiveInteger
         thoroughfareNumber2Suffix:
           type: string
           description: Suffix for the second thoroughfare number. Only relevant is thoroughfareNumber2 is populated
@@ -1334,7 +1610,6 @@ components:
           type: integer
           description: Postal delivery number if the address is a postal delivery type
           example: 15
-          x-cds-type: PositiveInteger
         postalDeliveryNumberPrefix:
           type: string
           description: Postal delivery number prefix related to the postal delivery number
@@ -1367,7 +1642,6 @@ components:
           type: string
           description: Link to a web page with more information on this condition
           example: https://ratecondition.example.com.au
-          x-cds-type: URIString
       description: Defines a condition for the applicability of a tiered rate
     BankingProductDiscountEligibility:
       type: object
@@ -1404,7 +1678,6 @@ components:
           type: string
           example: https://discounteligibility.example.com.au
           description: Link to a web page with more information on this eligibility constraint
-          x-cds-type: URIString
       x-conditional:
         - additionalInfo
         - additionalValue
@@ -1485,17 +1758,14 @@ components:
           type: string
           example: f632041c-d7c8-4679-a165-aa406cd62b13
           description: ID of the account for which transactions are provided
-          x-cds-type: ASCIIString
         transactionId:
           type: string
           example: f111111-d7c8-4679-a165-aa406cd62b13
           description: A unique ID of the transaction adhering to the standards for ID permanence.  This is mandatory (through hashing if necessary) unless there are specific and justifiable technical reasons why a transaction cannot be uniquely identified for a particular account type
-          x-cds-type: ASCIIString
         isDetailAvailable:
           type: boolean
           example: true
           description: True if extended information is available using the transaction detail end point. False if extended data is not available
-          x-cds-type: Boolean
         type:
           type: string
           example: FEE
@@ -1525,27 +1795,22 @@ components:
           example: "2021-01-12T15:43:00.121Z"
           description: The time the transaction was posted. This field is Mandatory if the transaction has status POSTED.  This is the time that appears on a standard statement.
             DateTimeString can be found at https://consumerdatastandardsaustralia.github.io/standards/#common-field-types
-          x-cds-type: DateTimeString
         valueDateTime:
           type: string
           example: "2021-01-12T15:43:00.121Z"
           description: Date and time at which assets become available to the account owner in case of a credit entry, or cease to be available to the account owner in case of a debit transaction entry
-          x-cds-type: DateTimeString
         executionDateTime:
           type: string
           example: "2021-01-12T15:43:00.121Z"
           description: The time the transaction was executed by the originating customer, if available
-          x-cds-type: DateTimeString
         amount:
           type: string
           example: 100.00
           description: The value of the transaction. Negative values mean money was outgoing from the account
-          x-cds-type: AmountString
         currency:
           type: string
           example: AUD
           description: The currency for the transaction amount. AUD assumed if not present
-          x-cds-type: CurrencyString
         reference:
           type: string
           example: overdraw
@@ -1858,7 +2123,6 @@ components:
         payeeId:
           description: ID of the payee adhering to the rules of ID permanence
           type: string
-          x-cds-type: ASCIIString
         nickname:
           description: The short display name of the payee as provided by the customer.
             Where a customer has not provided a nickname, a display name derived by
@@ -1881,7 +2145,6 @@ components:
         creationDate:
           description: The date the payee was created by the customer
           type: string
-          x-cds-type: DateString
       required:
         - nickname
         - payeeId
@@ -2033,7 +2296,6 @@ components:
         cardNumber:
           description: Name of the account to pay to
           type: string
-          x-cds-type: MaskedPANString
       required:
         - cardNumber
       type: object
@@ -2074,7 +2336,6 @@ components:
           description: Country where the beneficiary resides. A valid [ISO 3166 Alpha-3](https://www.iso.org/iso-3166-country-codes.html)
             country code
           type: string
-          x-cds-type: ExternalRef
         message:
           description: Response message for the payment
           type: string
@@ -2114,7 +2375,6 @@ components:
           description: Country of the recipient institution. A valid [ISO 3166 Alpha-3](https://www.iso.org/iso-3166-country-codes.html)
             country code
           type: string
-          x-cds-type: ExternalRef
         accountNumber:
           description: Account Targeted for payment
           type: string
@@ -2123,7 +2383,6 @@ components:
         beneficiaryBankBIC:
           description: Swift bank code.  Aligns with standard [ISO 9362](https://www.iso.org/standard/60390.html)
           type: string
-          x-cds-type: ExternalRef
         fedWireNumber:
           description: Number for Fedwire payment (Federal Reserve Wire Network)
           type: string
@@ -2140,7 +2399,6 @@ components:
           description: The legal entity identifier (LEI) for the beneficiary.  Aligns
             with [ISO 17442](https://www.iso.org/standard/59771.html)
           type: string
-          x-cds-type: ExternalRef
       required:
         - accountNumber
         - country
@@ -2151,17 +2409,14 @@ components:
           description: A unique ID of the account adhering to the standards for ID
             permanence.
           type: string
-          x-cds-type: ASCIIString
         authorisedEntity:
           $ref: '#/components/schemas/BankingAuthorisedEntity'
         lastDebitDateTime:
           description: The date and time of the last debit executed under this authorisation
           type: string
-          x-cds-type: DateTimeString
         lastDebitAmount:
           description: The amount of the last debit executed under this authorisation
           type: string
-          x-cds-type: AmountString
         adatree:
           $ref: '#/components/schemas/Adatree'
       required:
@@ -2266,23 +2521,19 @@ components:
         planId:
           description: The ID of the specific plan
           type: string
-          x-cds-type: ASCIIString
         effectiveFrom:
           description: The date and time from which this plan is effective (i.e. is
             available for origination). Used to enable the articulation of products
             to the regime before they are available for customers to originate
           type: string
-          x-cds-type: DateTimeString
         effectiveTo:
           description: The date and time at which this plan will be retired and will
             no longer be offered. Used to enable the managed deprecation of plans
           type: string
-          x-cds-type: DateTimeString
         lastUpdated:
           description: The last date and time that the information for this plan was
             changed (or the creation date for the plan if it has never been altered)
           type: string
-          x-cds-type: DateTimeString
         displayName:
           description: The display name of the plan
           type: string
@@ -2306,7 +2557,6 @@ components:
         brand:
           description: The ID of the brand under which this plan is offered
           type: string
-          x-cds-type: ASCIIString
         brandName:
           description: The display name of the brand under which this plan is offered
           type: string
@@ -2314,7 +2564,6 @@ components:
           description: A link to an application web page where this plan can be applied
             for
           type: string
-          x-cds-type: URIString
         additionalInformation:
           $ref: '#/components/schemas/EnergyPlan_additionalInformation'
         customerType:
@@ -2466,7 +2715,6 @@ components:
                 description: Optional end date for the discount after which the discount
                   is no longer available
                 type: string
-                x-cds-type: DateString
               methodUType:
                 description: The method of calculation of the discount
                 enum:
@@ -2481,7 +2729,6 @@ components:
                   rate:
                     description: The rate of the discount applied to the bill amount
                     type: string
-                    x-cds-type: RateString
                 required:
                   - rate
                 type: object
@@ -2491,7 +2738,6 @@ components:
                   rate:
                     description: The rate of the discount applied to the usageamount
                     type: string
-                    x-cds-type: RateString
                 required:
                   - rate
                 type: object
@@ -2501,7 +2747,6 @@ components:
                   amount:
                     description: The amount of the discount
                     type: string
-                    x-cds-type: AmountString
                 required:
                   - amount
                 type: object
@@ -2511,12 +2756,10 @@ components:
                   rate:
                     description: The rate of the discount over the usage amount
                     type: string
-                    x-cds-type: RateString
                   usageAmount:
                     description: The usage amount threshold above which the discount
                       applies
                     type: string
-                    x-cds-type: AmountString
                 required:
                   - rate
                   - usageAmount
@@ -2563,17 +2806,14 @@ components:
                       description: The upper percentage of green power used applicable
                         for this tier
                       type: string
-                      x-cds-type: RateString
                     rate:
                       description: The rate of the charge if the type implies the
                         application of a rate
                       type: string
-                      x-cds-type: RateString
                     amount:
                       description: The amount of the charge if the type implies the
                         application of a fixed amount
                       type: string
-                      x-cds-type: AmountString
                   required:
                     - percentGreen
                   type: object
@@ -2677,11 +2917,9 @@ components:
               amount:
                 description: The fee amount. Required if term is not PERCENT_OF_BILL
                 type: string
-                x-cds-type: AmountString
               rate:
                 description: The fee rate. Required if term is PERCENT_OF_BILL
                 type: string
-                x-cds-type: RateString
               description:
                 description: A description of the fee
                 type: string
@@ -2728,7 +2966,6 @@ components:
                   amount:
                     description: The tariff amount
                     type: string
-                    x-cds-type: AmountString
                 required:
                   - amount
                 type: object
@@ -2747,7 +2984,6 @@ components:
                   amount:
                     description: The tariff amount
                     type: string
-                    x-cds-type: AmountString
                   timeVariations:
                     description: Array of time periods for which this tariff is applicable
                     items:
@@ -2771,13 +3007,11 @@ components:
                             which the tariff applies.  If absent assumes start of
                             day (i.e. midnight)
                           type: string
-                          x-cds-type: TimeString
                         endTime:
                           description: The end of the time period per day for which
                             the tariff applies.  If absent assumes end of day (i.e.
                             one second before midnight)
                           type: string
-                          x-cds-type: TimeString
                       type: object
                     type: array
                 required:
@@ -2824,7 +3058,6 @@ components:
                 description: The amount of access charge for the tariff period, in
                   dollars per day exclusive of GST.
                 type: string
-                x-cds-type: AmountString
               timeZone:
                 description: Specifies the charge specific time zone for calculation of the time of use thresholds. If absent, timezone value in EnergyPlanContract is assumed.
                 enum:
@@ -2854,7 +3087,6 @@ components:
                       included fixed usage, in dollars per kWh inclusive of GST.  Only
                       required if pricingModel field is QUOTA
                     type: string
-                    x-cds-type: AmountString
                   rates:
                     description: Array of controlled load rates in order of usage
                       volume
@@ -2864,7 +3096,6 @@ components:
                           description: Unit price of usage per measure unit (exclusive
                             of GST)
                           type: string
-                          x-cds-type: AmountString
                         measureUnit:
                           description: The measurement unit of rate. Assumed to be
                             KWH if absent
@@ -2892,7 +3123,6 @@ components:
                       according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations)
                       (excludes recurrence syntax)
                     type: string
-                    x-cds-type: ExternalRef
                 required:
                   - displayName
                   - rates
@@ -2919,7 +3149,6 @@ components:
                             description: Unit price of usage per  measure unit (exclusive
                               of GST)
                             type: string
-                            x-cds-type: AmountString
                           measureUnit:
                             description: The measurement unit of rate. Assumed to
                               be KWH if absent
@@ -3005,7 +3234,6 @@ components:
                       description: The charge amount per  measure unit exclusive of
                         GST
                       type: string
-                      x-cds-type: AmountString
                     measureUnit:
                       description: The measurement unit of charge amount. Assumed
                         to be KWH if absent
@@ -3051,12 +3279,10 @@ components:
                       description: Minimum demand for this demand tariff in kW.  If
                         absent then 0 is assumed
                       type: string
-                      x-cds-type: AmountString
                     maxDemand:
                       description: Maximum demand for this demand tariff in kW.  If
                         present, must be higher than the value of the minDemand field
                       type: string
-                      x-cds-type: AmountString
                     measurementPeriod:
                       description: Application period for the demand tariff
                       enum:
@@ -3119,13 +3345,11 @@ components:
           description: The daily supply charge (exclusive of GST) for this controlled
             load tier
           type: string
-          x-cds-type: AmountString
         period:
           description: The period for which the controlled load rate applies. Formatted
             according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations)
             (excludes recurrence syntax)
           type: string
-          x-cds-type: ExternalRef
         rates:
           description: Array of controlled load rates in order of usage volume
           items:
@@ -3202,12 +3426,10 @@ components:
         validFromDate:
           description: The start date from which this service point first became valid
           type: string
-          x-cds-type: DateString
         lastUpdateDateTime:
           description: The date and time that the information for this service point
             was modified
           type: string
-          x-cds-type: DateTimeString
         consumerProfile:
           $ref: '#/components/schemas/EnergyServicePoint_consumerProfile'
         distributionLossFactor:
@@ -3264,13 +3486,11 @@ components:
         readStartDate:
           description: Date time when the meter reads start
           type: string
-          x-cds-type: DateString
         readEndDate:
           description: Date time when the meter reads end.  If absent then assumed
             to be equal to readStartDate.  In this case the entry represents data
             for a single date specified by readStartDate
           type: string
-          x-cds-type: DateString
         unitOfMeasure:
           description: Unit of measure of the meter reads. Refer to Appendix B of
             <a href='https://www.aemo.com.au/-/media/files/stakeholder_consultation/consultations/nem-consultations/2019/5ms-metering-package-2/final-determination/mdff-specification-nem12-nem13-v21-final-determination-clean.pdf?la=en&hash=03FCBA0D60E091DE00F2361AE76206EA'>MDFF
@@ -3361,7 +3581,6 @@ components:
         creationDate:
           description: The date that the account was created or opened
           type: string
-          x-cds-type: DateString
         balance:
           description: The current balance of the account.  A positive value indicates
             that amount is owing to be paid.  A negative value indicates that the
@@ -3392,7 +3611,6 @@ components:
           description: Optional payment amount indicating that a constant payment
             amount is scheduled to be paid (used in bill smooting scenarios)
           type: string
-          x-cds-type: AmountString
         paymentScheduleUType:
           description: The type of object present in this response
           enum:
@@ -3444,32 +3662,26 @@ components:
         additionalInfoUri:
           description: Optional link to additional information regarding the concession
           type: string
-          x-cds-type: URIString
         startDate:
           description: Optional start date for the application of the concession
           type: string
-          x-cds-type: DateString
         endDate:
           description: Optional end date for the application of the concession
           type: string
-          x-cds-type: DateString
         discountFrequency:
           description: Conditional attribute for frequency at which a concession is
             applied. Required if type is FIXED_AMOUNT or FIXED_PERCENTAGE. Formatted
             according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations)
             (excludes recurrence syntax)
           type: string
-          x-cds-type: ExternalRef
         amount:
           description: Conditional attribute for the amount of discount for the concession-
             required if type is FIXED_AMOUNT
           type: string
-          x-cds-type: AmountString
         percentage:
           description: Conditional attribute for the percentage of discount of concession
             - required if type is FIXED_PERCENTAGE
           type: string
-          x-cds-type: RateString
         appliedTo:
           description: Array of ENUM's to specify what the concession applies to.
             Multiple ENUM values can be provided. If absent, USAGE is assumed
@@ -3502,29 +3714,24 @@ components:
           description: The date that the invoice was actually issued (as opposed to
             generated or calculated)
           type: string
-          x-cds-type: DateString
         dueDate:
           description: The date that the invoice is due to be paid
           type: string
-          x-cds-type: DateString
         period:
           $ref: '#/components/schemas/EnergyInvoice_period'
         invoiceAmount:
           description: The net amount due for this invoice regardless of previous
             balance
           type: string
-          x-cds-type: AmountString
         gstAmount:
           description: The total GST amount for this invoice.  If absent then zero
             is assumed
           type: string
-          x-cds-type: AmountString
         payOnTimeDiscount:
           $ref: '#/components/schemas/EnergyInvoice_payOnTimeDiscount'
         balanceAtIssue:
           description: The account balance at the time the invoice was issued
           type: string
-          x-cds-type: AmountString
         servicePoints:
           description: Array of service point IDs to which this invoice applies. May
             be empty if the invoice contains no electricity usage related charges
@@ -3563,23 +3770,19 @@ components:
           description: The aggregate total of usage charges for the period covered
             by the invoice (exclusive of GST)
           type: string
-          x-cds-type: AmountString
         totalGenerationCredits:
           description: The aggregate total of generation credits for the period covered
             by the invoice (exclusive of GST)
           type: string
-          x-cds-type: AmountString
         totalOnceOffCharges:
           description: The aggregate total of any once-off charges arising from electricity
             usage for the period covered by the invoice (exclusive of GST)
           type: string
-          x-cds-type: AmountString
         totalOnceOffDiscounts:
           description: The aggregate total of any once-off discounts or credits arising
             from electricity usage for the period covered by the invoice (exclusive
             of GST)
           type: string
-          x-cds-type: AmountString
         otherCharges:
           description: Optional array of charges that may be part of the invoice (for
             e.g. environmental charges for C&I consumers) (exclusive of GST)
@@ -3590,7 +3793,6 @@ components:
           description: The total GST for all electricity usage charges.  If absent
             then zero is assumed
           type: string
-          x-cds-type: AmountString
       required:
         - totalGenerationCredits
         - totalOnceOffCharges
@@ -3603,23 +3805,19 @@ components:
           description: The aggregate total of usage charges for the period covered
             by the invoice (exclusive of GST)
           type: string
-          x-cds-type: AmountString
         totalGenerationCredits:
           description: The aggregate total of generation credits for the period covered
             by the invoice (exclusive of GST)
           type: string
-          x-cds-type: AmountString
         totalOnceOffCharges:
           description: The aggregate total of any once-off charges arising from electricity
             usage for the period covered by the invoice (exclusive of GST)
           type: string
-          x-cds-type: AmountString
         totalOnceOffDiscounts:
           description: The aggregate total of any once-off discounts or credits arising
             from electricity usage for the period covered by the invoice (exclusive
             of GST)
           type: string
-          x-cds-type: AmountString
         otherCharges:
           description: Optional array of charges that may be part of the invoice (for
             e.g. environmental charges for C&I consumers) (exclusive of GST)
@@ -3630,7 +3828,6 @@ components:
           description: The total GST for all electricity usage charges.  If absent
             then zero is assumed
           type: string
-          x-cds-type: AmountString
       required:
         - totalGenerationCredits
         - totalOnceOffCharges
@@ -3644,17 +3841,14 @@ components:
           description: The aggregate total of account level charges for the period
             covered by the invoice
           type: string
-          x-cds-type: AmountString
         totalDiscounts:
           description: The aggregate total of account level discounts or credits for
             the period covered by the invoice
           type: string
-          x-cds-type: AmountString
         totalGst:
           description: The total GST for all account level charges.  If absent then
             zero is assumed
           type: string
-          x-cds-type: AmountString
       required:
         - totalCharges
         - totalDiscounts
@@ -3667,12 +3861,10 @@ components:
         executionDateTime:
           description: The date and time that the transaction occurred
           type: string
-          x-cds-type: DateTimeString
         gst:
           description: The GST incurred in the transaction.  Should not be included
             for credits or payments.  If absent zero is assumed
           type: string
-          x-cds-type: AmountString
         transactionUType:
           description: Indicator of the type of transaction object present in this
             record
@@ -3739,11 +3931,9 @@ components:
         startDate:
           description: Date and time when the usage period starts
           type: string
-          x-cds-type: DateTimeString
         endDate:
           description: Date and time when the usage period ends
           type: string
-          x-cds-type: DateTimeString
         measureUnit:
           description: The measurement unit of rate. Assumed to be KWH if absent
           enum:
@@ -3764,7 +3954,6 @@ components:
           description: The amount charged or credited for this transaction prior to
             any adjustments being applied.  A negative value indicates a credit
           type: string
-          x-cds-type: AmountString
         calculationFactors:
           description: Additional calculation factors that inform the transaction
           items:
@@ -3816,11 +4005,9 @@ components:
         startDate:
           description: Date and time when the demand period starts
           type: string
-          x-cds-type: DateTimeString
         endDate:
           description: Date and time when the demand period ends
           type: string
-          x-cds-type: DateTimeString
         rate:
           description: The rate for the demand charge in kVA.  A negative value indicates
             power generated
@@ -3829,7 +4016,6 @@ components:
           description: The amount charged or credited for this transaction prior to
             any adjustments being applied.  A negative value indicates a credit
           type: string
-          x-cds-type: AmountString
         calculationFactors:
           description: Additional calculation factors that inform the transaction
           items:
@@ -3861,7 +4047,6 @@ components:
           description: The amount of the charge or credit.  A positive value indicates
             a charge and a negative value indicates a credit
           type: string
-          x-cds-type: AmountString
         description:
           description: A free text description of the item
           type: string
@@ -3882,11 +4067,9 @@ components:
         startDate:
           description: Optional start date for the application of the charge
           type: string
-          x-cds-type: DateString
         endDate:
           description: Optional end date for the application of the charge
           type: string
-          x-cds-type: DateString
         type:
           description: Type of charge. Assumed to be other if absent
           enum:
@@ -3901,7 +4084,6 @@ components:
         amount:
           description: The amount of the charge
           type: string
-          x-cds-type: AmountString
         description:
           description: A free text description of the item
           type: string
@@ -3914,7 +4096,6 @@ components:
         amount:
           description: The amount paid
           type: string
-          x-cds-type: AmountString
         method:
           description: The method of payment
           enum:
@@ -4050,23 +4231,18 @@ components:
         overviewUri:
           description: A link to a general overview of the plan
           type: string
-          x-cds-type: URIString
         termsUri:
           description: A link to terms and conditions for the plan
           type: string
-          x-cds-type: URIString
         eligibilityUri:
           description: A link to detail on eligibility criteria for the plan
           type: string
-          x-cds-type: URIString
         pricingUri:
           description: A link to detail on pricing for the plan
           type: string
-          x-cds-type: URIString
         bundleUri:
           description: A link to detail on bundles that this plan can be a part of
           type: string
-          x-cds-type: URIString
       type: object
     EnergyPlan_geography:
       description: Describes the geographical area that the plan is available for.  If
@@ -4101,18 +4277,15 @@ components:
           description: Minimum value of the charge if the charge is a range or the
             absolute value of the charge if no range is specified
           type: string
-          x-cds-type: AmountString
         maximumValue:
           description: The upper limit of the charge if the charge could occur in
             a range
           type: string
-          x-cds-type: AmountString
         period:
           description: The charges that occur on a schedule indicates the frequency.
             Formatted according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations)
             (excludes recurrence syntax)
           type: string
-          x-cds-type: ExternalRef
       required:
         - displayName
         - minimumValue
@@ -4140,7 +4313,6 @@ components:
         greenPercentage:
           description: Percentage of green power intrinsically included in the plan
           type: string
-          x-cds-type: RateString
       required:
         - greenPercentage
       type: object
@@ -4175,7 +4347,6 @@ components:
           description: 'Number of days in the cooling off period for the contract.  Mandatory
             for plans with type of MARKET '
           type: integer
-          x-cds-type: PositiveInteger
         billFrequency:
           description: An array of the available billing schedules for this contract.
             Formatted according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations)
@@ -4195,7 +4366,6 @@ components:
         unitPrice:
           description: Unit price of usage per kWh (exclusive of GST)
           type: string
-          x-cds-type: AmountString
         volume:
           description: Volume in kWh that this rate applies to.  Only applicable for
             stepped rates where different rates apply for different volumes of usage
@@ -4304,7 +4474,6 @@ components:
           description: A valid [ISO 3166 Alpha-3](https://www.iso.org/iso-3166-country-codes.html)
             country code. Australia (AUS) is assumed if country is not present.
           type: string
-          x-cds-type: ExternalRef
       required:
         - addressLine1
         - city
@@ -4325,7 +4494,6 @@ components:
           description: Thoroughfare number for a property (first number in a property
             ranged address)
           type: integer
-          x-cds-type: PositiveInteger
         thoroughfareNumber1Suffix:
           description: Suffix for the thoroughfare number. Only relevant is thoroughfareNumber1
             is populated
@@ -4334,7 +4502,6 @@ components:
           description: Second thoroughfare number (only used if the property has a
             ranged address eg 23-25)
           type: integer
-          x-cds-type: PositiveInteger
         thoroughfareNumber2Suffix:
           description: Suffix for the second thoroughfare number. Only relevant is
             thoroughfareNumber2 is populated
@@ -4379,7 +4546,6 @@ components:
           description: Postal delivery number if the address is a postal delivery
             type
           type: integer
-          x-cds-type: PositiveInteger
         postalDeliveryNumberPrefix:
           description: Postal delivery number prefix related to the postal delivery
             number
@@ -4492,7 +4658,6 @@ components:
           description: This date is the next scheduled meter read date (NSRD) if a
             manual Meter Reading is required
           type: string
-          x-cds-type: DateString
       required:
         - installationType
         - status
@@ -4628,7 +4793,6 @@ components:
         readIntervalLength:
           description: Read interval length in minutes
           type: integer
-          x-cds-type: PositiveInteger
         aggregateValue:
           description: The aggregate sum of the interval read values. If positive
             then it means net consumption, if negative it means net export
@@ -4773,7 +4937,6 @@ components:
             Connections to be considered as a group, all of the AC Connections included
             must have the same attributes
           type: integer
-          x-cds-type: PositiveInteger
         equipmentType:
           description: Indicates whether the DER device is connected via an inverter
             (and what category of inverter it is) or not (e.g. rotating machine).
@@ -4795,7 +4958,6 @@ components:
         commissioningDate:
           description: The date that the DER installation is commissioned
           type: string
-          x-cds-type: DateString
         status:
           description: Code used to indicate the status of the Inverter. This will
             be used to identify if an inverter is active or inactive or decommissioned
@@ -4832,11 +4994,9 @@ components:
         startDate:
           description: The start date of the applicability of this plan
           type: string
-          x-cds-type: DateString
         endDate:
           description: The end date of the applicability of this plan
           type: string
-          x-cds-type: DateString
       required:
         - startDate
       type: object
@@ -4944,7 +5104,6 @@ components:
             to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations)
             (excludes recurrence syntax)
           type: string
-          x-cds-type: ExternalRef
         calculationType:
           description: The mechanism by which the payment amount is calculated.  Explanation
             of values are as follows:<br/><ul><li>**STATIC** - Indicates a consistent,
@@ -4987,7 +5146,6 @@ components:
             to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations)
             (excludes recurrence syntax)
           type: string
-          x-cds-type: ExternalRef
         calculationType:
           description: The mechanism by which the payment amount is calculated.  Explanation
             of values are as follows:<br/><ul><li>**STATIC** - Indicates a consistent,
@@ -5017,7 +5175,6 @@ components:
             according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations)
             (excludes recurrence syntax)
           type: string
-          x-cds-type: ExternalRef
       required:
         - billFrequency
       type: object
@@ -5029,11 +5186,9 @@ components:
         startDate:
           description: The start date of the period covered by this invoice
           type: string
-          x-cds-type: DateString
         endDate:
           description: The end date of the period covered by this invoice
           type: string
-          x-cds-type: DateString
       required:
         - endDate
         - startDate
@@ -5045,17 +5200,14 @@ components:
           description: The amount that will be discounted if the invoice is paid by
             the date specified
           type: string
-          x-cds-type: AmountString
         gstAmount:
           description: The GST amount that will be discounted if the invoice is paid
             by the date specified.  If absent then zero is assumed
           type: string
-          x-cds-type: AmountString
         date:
           description: The date by which the invoice must be paid to receive the pay
             on time discount
           type: string
-          x-cds-type: DateString
       required:
         - date
         - discountAmount
@@ -5077,7 +5229,6 @@ components:
           description: The aggregate total of charges for this item (exclusive of
             GST)
           type: string
-          x-cds-type: AmountString
         description:
           description: A free text description of the type of charge
           type: string
@@ -5105,7 +5256,6 @@ components:
         amount:
           description: The amount of the adjustment
           type: string
-          x-cds-type: AmountString
         description:
           description: A free text description of the adjustment
           type: string
@@ -5129,7 +5279,6 @@ components:
         type: array
         items:
           type: string
-          x-cds-type: ASCIIString
           description: Array of specific accountIds to obtain data for
           example: 30370f1b-cd27-4d56-b56d-beb49fc9aa48
     QueryAccountIsOwned:
@@ -5140,7 +5289,6 @@ components:
       schema:
         type: boolean
         example: true
-        x-cds-type: Boolean
     QueryAccountOpenStatus:
       name: openStatus
       in: query
@@ -5202,7 +5350,6 @@ components:
         type: array
         items:
           type: string
-          x-cds-type: ASCIIString
           description: Array of specific UseCaseIds to obtain data for
           example: HOME_LOAN
     QueryCdrArrangementIds:
@@ -5213,7 +5360,6 @@ components:
         type: array
         items:
           type: string
-          x-cds-type: ASCIIString
           description: Array of specific cdrArrangementIds to obtain data for
           example: 30370f1b-cd27-4d56-b56d-beb49fc9aa48
     QueryConsentIds:
@@ -5224,7 +5370,6 @@ components:
         type: array
         items:
           type: string
-          x-cds-type: ASCIIString
           description: Array of specific consentIds to obtain data for
           example: 30370f1b-cd27-4d56-b56d-beb49fc9aa48
     QueryConsumerIds:
@@ -5235,7 +5380,6 @@ components:
         type: array
         items:
           type: string
-          x-cds-type: ASCIIString
           description: Array of specific consumerIds to obtain data for
           example: 30370f1b-cd27-4d56-b56d-beb49fc9aa48
     QueryDataHolderBrandIds:
@@ -5246,7 +5390,6 @@ components:
         type: array
         items:
           type: string
-          x-cds-type: ASCIIString
           description: Array of specific dataHolderBrandIds to obtain data for
           example: 30370f1b-cd27-4d56-b56d-beb49fc9aa48
     QueryTransactionOldestRetrievalTime:
@@ -5256,7 +5399,6 @@ components:
         Format is aligned to DateTimeString common type.
       schema:
         type: string
-        x-cds-type: DateTimeString
         example: "2012-12-25T15:43:00-08:00"
     QueryTransactionNewestRetrievalTime:
       name: newestRetrievalTime
@@ -5265,7 +5407,6 @@ components:
         Format is aligned to DateTimeString common type.
       schema:
         type: string
-        x-cds-type: DateTimeString
         example: "2012-12-25T15:43:00-08:00"
     QueryTransactionNewestTime:
       name: newestTime
@@ -5274,7 +5415,6 @@ components:
         effective time at or before this date/time. Format is aligned to DateTimeString common type.
       schema:
         type: string
-        x-cds-type: DateTimeString
         example: "2012-12-25T15:43:00-08:00"
     QueryTransactionOldestTime:
       name: oldestTime
@@ -5284,7 +5424,6 @@ components:
         minus 90 days.  Format is aligned to DateTimeString common type
       schema:
         type: string
-        x-cds-type: DateTimeString
         example: "2012-12-25T15:43:00-08:00"
     QueryTransactionTypes:
       name: types
@@ -5294,7 +5433,6 @@ components:
         type: array
         items:
           type: string
-          x-cds-type: ASCIIString
           description: Array of specific types to obtain data for
           example: FEE
     QueryTransactionMinimumAmount:
@@ -5304,7 +5442,6 @@ components:
       schema:
         type: number
         example: 100
-        x-cds-type: Number
     QueryTransactionMaximumAmount:
       name: maximumAmount
       in: query
@@ -5312,7 +5449,6 @@ components:
       schema:
         type: number
         example: 300
-        x-cds-type: Number
     QueryPayeeTypes:
       name: types
       in: query
@@ -5321,7 +5457,6 @@ components:
         type: array
         items:
           type: string
-          x-cds-type: ASCIIString
           description: Array of specific types to obtain data for
           example: BILLER
     QueryPayeeIds:
@@ -5333,7 +5468,6 @@ components:
         type: array
         items:
           type: string
-          x-cds-type: ASCIIString
           description: Array of specific payeeIds to obtain data for
           example: 30370f1b-cd27-4d56-b56d-beb49fc9aa48
     QueryServicePointIds:
@@ -5345,7 +5479,6 @@ components:
         items:
           type: string
           description: Array of specific servicePointIds to filter the result list by
-          x-cds-type: ASCIIString
     QueryInvoiceIds:
       name: invoiceIds
       in: query
@@ -5355,7 +5488,6 @@ components:
         items:
           type: string
           description: Array of specific invoiceIds to filter the result list by
-          x-cds-type: ASCIIString
     QueryBillingIds:
       name: billingIds
       in: query
@@ -5365,7 +5497,6 @@ components:
         items:
           type: string
           description: Array of specific billingId to filter the result list by
-          x-cds-type: ASCIIString
     QueryPlanIds:
       name: planIds
       in: query
@@ -5420,4 +5551,3 @@ components:
           schema:
             type: string
             example: something went wrong
-
