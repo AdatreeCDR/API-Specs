@@ -127,7 +127,7 @@ paths:
           $ref: '#/components/responses/403Forbidden'
         429:
           $ref: '#/components/responses/429RateLimited'
-  /data/banking/direct-debits:
+  /data/banking/payments/direct-debits:
     get:
       security:
         - bearerAuth: [ 'data:banking:regular_payments:read' ]
