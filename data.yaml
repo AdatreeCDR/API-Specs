@@ -228,8 +228,6 @@ paths:
           $ref: '#/components/responses/401Unauthorised'
         403:
           $ref: '#/components/responses/403Forbidden'
-        404:
-          $ref: '#/components/responses/404NotFound'
         429:
           $ref: '#/components/responses/429RateLimited'
   /data/energy/plans:
