@@ -201,6 +201,35 @@ paths:
           $ref: '#/components/responses/403Forbidden'
         429:
           $ref: '#/components/responses/429RateLimited'
+  /data/common/customers:
+    get:
+      tags:
+        - Common
+      summary: Get Customers
+      description: Obtain a list of consumers that have consented to share across all data holders
+      operationId: getCustomers
+      parameters:
+        - $ref: '#/components/parameters/QueryUseCaseIds'
+        - $ref: '#/components/parameters/QueryCdrArrangementIds'
+        - $ref: '#/components/parameters/QueryConsentIds'
+        - $ref: '#/components/parameters/QueryConsumerIds'
+        - $ref: '#/components/parameters/QueryDataHolderBrandIds'
+        - $ref: '#/components/parameters/QueryCustomerUTypes'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseCommonCustomerList'
+        400:
+          $ref: '#/components/responses/400BadRequest'
+        401:
+          $ref: '#/components/responses/401Unauthorised'
+        403:
+          $ref: '#/components/responses/403Forbidden'
+        429:
+          $ref: '#/components/responses/429RateLimited'
   /data/energy/plans:
     get:
       security:
@@ -2446,7 +2475,277 @@ components:
       type: object
       x-conditional:
         - financialInstitution
-
+    ResponseCommonCustomerList:
+      type: object
+      required:
+        - data
+        - links
+      properties:
+        data:
+          $ref: '#/components/schemas/ResponseCommonCustomerList_data'
+        links:
+          $ref: '#/components/schemas/LinksPaginated'
+        meta:
+          $ref: '#/components/schemas/MetaPaginated'
+      x-conditional:
+        - person
+        - organisation
+    ResponseCommonCustomerList_data:
+      type: object
+      required:
+        - customers
+      properties:
+        customers:
+          type: array
+          description: The list of common customers returned returned. If the filter results in an empty set then this array may have no records
+          items:
+            $ref: '#/components/schemas/CommonCustomer'
+    CommonCustomer:
+      type: object
+      required:
+        - customerUType
+        - adatree
+      properties:
+        customerUType:
+          type: string
+          description: The type of customer object that is present
+          example: person
+          enum:
+            - person
+            - organisation
+        person:
+          $ref: '#/components/schemas/CommonPersonDetail'
+        organisation:
+          $ref: '#/components/schemas/CommonOrganisationDetail'
+        adatree:
+          $ref: '#/components/schemas/Adatree'
+    CommonPerson:
+      type: object
+      required:
+        - lastName
+        - middleNames
+      properties:
+        lastUpdateTime:
+          type: string
+          example: "1997-01-12T15:43:00.121Z"
+          description: The date and time that this record was last updated by the customer.  If no update has occurred then this date should reflect the initial creation date for the data
+        firstName:
+          type: string
+          example: John
+          description: For people with single names this field need not be present.  The single name should be in the lastName field
+        lastName:
+          type: string
+          example: Doe
+          description: For people with single names the single name should be in this field
+        middleNames:
+          type: array
+          description: Field is mandatory but array may be empty
+          example: [ ]
+          items:
+            type: string
+        prefix:
+          type: string
+          example: Mr
+          description: Also known as title or salutation.  The prefix to the name (e.g. Mr, Mrs, Ms, Miss, Sir, etc)
+        suffix:
+          type: string
+          example: Jr
+          description: Used for a trailing suffix to the name (e.g. Jr)
+        occupationCode:
+          type: string
+          example: 233211
+          description: Value is a valid [ANZSCO](http://www.abs.gov.au/ANZSCO) Standard Occupation classification code. If the occupation code held by the data holder is not one of the supported [ANZSCO](http://www.abs.gov.au/ANZSCO) versions, then it must not be supplied.
+    CommonPersonDetail:
+      allOf:
+        - $ref: '#/components/schemas/CommonPerson'
+        - type: object
+          required:
+            - emailAddresses
+            - phoneNumbers
+            - physicalAddresses
+          properties:
+            phoneNumbers:
+              type: array
+              description: Array is mandatory but may be empty if no phone numbers are held
+              items:
+                $ref: '#/components/schemas/CommonPhoneNumber'
+            emailAddresses:
+              type: array
+              description: May be empty
+              items:
+                $ref: '#/components/schemas/CommonEmailAddress'
+            physicalAddresses:
+              type: array
+              description: Must contain at least one address. One and only one address may have the purpose of REGISTERED. Zero or one, and no more than one, record may have the purpose of MAIL. If zero then the REGISTERED address is to be used for mail
+              items:
+                $ref: '#/components/schemas/CommonPhysicalAddressWithPurpose'
+    CommonOrganisation:
+      type: object
+      required:
+        - agentLastName
+        - agentRole
+        - businessName
+        - organisationType
+      properties:
+        lastUpdateTime:
+          type: string
+          example: "1997-01-12T15:43:00.121Z"
+          description: The date and time that this record was last updated by the customer. If no update has occurred then this date should reflect the initial creation date for the data
+        agentFirstName:
+          type: string
+          example: Jane
+          description: The first name of the individual providing access on behalf of the organisation. For people with single names this field need not be present.  The single name should be in the lastName field
+        agentLastName:
+          type: string
+          example: Doe
+          description: The last name of the individual providing access on behalf of the organisation. For people with single names the single name should be in this field
+        agentRole:
+          type: string
+          example: manager
+          description: The role of the individual identified as the agent who is providing authorisation.  Expected to be used for display. Default to Unspecified if the role is not known
+        businessName:
+          type: string
+          example: bumpty
+          description: Name of the organisation
+        legalName:
+          type: string
+          example: dumpty
+          description: Legal name, if different to the business name
+        shortName:
+          type: string
+          example: bdumpty
+          description: Short name used for communication, if different to the business name
+        abn:
+          type: string
+          example: 2342342342
+          description: Australian Business Number for the organisation
+        acn:
+          type: string
+          example: 13241234234
+          description: Australian Company Number for the organisation. Required only if an ACN is applicable for the organisation type
+        isACNCRegistered:
+          type: boolean
+          example: true
+          description: True if registered with the ACNC.  False if not. Absent or null if not confirmed.
+        industryCode:
+          type: string
+          example: MINING
+          description: A valid [ANZSIC](http://www.abs.gov.au/ANZSIC) code for the organisation. If the industry code held by the data holder is not one of the supported [ANZSIC](http://www.abs.gov.au/ANZSIC) versions, then it must not be supplied.
+        organisationType:
+          type: string
+          example: COMPANY
+          description: Legal organisation type
+          enum:
+            - COMPANY
+            - GOVERNMENT_ENTITY
+            - PARTNERSHIP
+            - SOLE_TRADER
+            - TRUST
+            - OTHER
+        registeredCountry:
+          type: string
+          description: Enumeration with values from [ISO 3166 Alpha-3](https://www.iso.org/iso-3166-country-codes.html) country codes.  Assumed to be AUS if absent
+          example: AUS
+        establishmentDate:
+          type: string
+          description: The date the organisation described was established
+          example: "2017-12-31"
+    CommonOrganisationDetail:
+      allOf:
+        - $ref: '#/components/schemas/CommonOrganisation'
+        - type: object
+          required:
+            - physicalAddresses
+          properties:
+            physicalAddresses:
+              type: array
+              description: Must contain at least one address. One and only one address may have the purpose of REGISTERED. Zero or one, and no more than one, record may have the purpose of MAIL. If zero then the REGISTERED address is to be used for mail
+              items:
+                $ref: '#/components/schemas/CommonPhysicalAddressWithPurpose'
+    CommonPhoneNumber:
+      type: object
+      required:
+        - fullNumber
+        - number
+        - purpose
+      properties:
+        isPreferred:
+          type: boolean
+          description: May be true for one and only one entry to indicate the preferred phone number. Assumed to be 'false' if not present
+          example: true
+        purpose:
+          type: string
+          description: The purpose of the number as specified by the customer
+          example: HOME
+          enum:
+            - MOBILE
+            - HOME
+            - INTERNATIONAL
+            - WORK
+            - OTHER
+            - UNSPECIFIED
+        countryCode:
+          type: string
+          description: If absent, assumed to be Australia (+61). The + should be included
+          example: +61
+        areaCode:
+          type: string
+          description: Required for non Mobile Phones, if field is present and refers to Australian code - the leading 0 should be omitted.
+          example: ""
+        number:
+          type: string
+          description: The actual phone number, with leading zeros as appropriate
+          example: 400000000
+        extension:
+          type: string
+          example: ""
+          description: An extension number (if applicable)
+        fullNumber:
+          type: string
+          description: Fully formatted phone number with country code, area code, number and extension incorporated. Formatted according to section 5.1.4. of [RFC 3966](https://www.ietf.org/rfc/rfc3966.txt)
+          example: +61400000000
+      x-conditional:
+        - areaCode
+    CommonEmailAddress:
+      type: object
+      required:
+        - address
+        - purpose
+      properties:
+        isPreferred:
+          type: boolean
+          description: May be true for one and only one email record in the collection. Denotes the default email address
+          example: true
+        purpose:
+          type: string
+          description: The purpose for the email, as specified by the customer (Enumeration)
+          example: WORK
+          enum:
+            - WORK
+            - HOME
+            - OTHER
+            - UNSPECIFIED
+        address:
+          type: string
+          example: 1 Pitt ST SYDNEY NSW 2000
+          description: A correctly formatted email address, as defined by the addr_spec format in [RFC 5322](https://www.ietf.org/rfc/rfc5322.txt)
+    CommonPhysicalAddressWithPurpose:
+      allOf:
+        - $ref: '#/components/schemas/CommonPhysicalAddress'
+        - type: object
+          required:
+            - purpose
+          properties:
+            purpose:
+              type: string
+              description: Enumeration of values indicating the purpose of the physical address
+              example: WORK
+              enum:
+                - MAIL
+                - PHYSICAL
+                - REGISTERED
+                - WORK
+                - OTHER
     #-------------------------------
     # Energy Schema Definitions
     #-------------------------------
@@ -4212,9 +4511,6 @@ components:
           description: A human-readable explanation specific to this occurrence of
             the problem.
           type: string
-        cdrArrangementId:
-          description: CDR arrangement id where data fetch error occurred
-          type: string
         retryAfter:
           description: "'Retry-After' value if error code is 'THROTTLED_BY_DATA_HOLDER_ERROR', which can either be a http-date or delay in seconds, as provided by data holder. Please note this value is not always provided by data holders, in which case this field will be null."
           type: string
@@ -5470,6 +5766,20 @@ components:
           type: string
           description: Array of specific payeeIds to obtain data for
           example: 30370f1b-cd27-4d56-b56d-beb49fc9aa48
+    QueryCustomerUTypes:
+      name: customerUTypes
+      in: query
+      description: Used to filter results on the customerUType field applicable to customers.
+        Any one of the valid values for this field can be supplied.
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+          example: person
+          enum:
+            - person
+            - organisation
     QueryServicePointIds:
       name: servicePointIds
       in: query
