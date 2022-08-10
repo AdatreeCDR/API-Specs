@@ -397,6 +397,18 @@ paths:
             example: "2022-02-01T15:43:00.121Z"
         - $ref: '#/components/parameters/ParamPage'
         - $ref: '#/components/parameters/ParamPageSize'
+      callbacks:
+        ConsentUpdated:
+          $YourWebhookUrl:
+            post:
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/ConsentEvent'
+              responses:
+                '200':
+                  description: Your server returns this code if it accepts the callback
       responses:
         200:
           description: list of ConsentEvent with pagination
