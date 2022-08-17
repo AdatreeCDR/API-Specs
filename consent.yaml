@@ -175,7 +175,7 @@ paths:
       description: Create a consent record for consumer
       operationId: createConsent
       parameters:
-        - $ref: '#/components/parameters/HeaderConsumerClientHeaders'
+        - $ref: '#/components/parameters/HeaderConsumerUserAgent'
         - $ref: '#/components/parameters/HeaderConsumerIpAddress'
       requestBody:
         content:
@@ -1107,8 +1107,7 @@ components:
       description: Mandatory for calls using a Machine token. The consumer's original User Agent header
       schema:
         type: string
-        example: TW96aWxsYS81LjAgKFgxMTsgTGludXggeDg2XzY0KSBBcHBsZVdlYktpdC81MzcuMzYgKEtIVE1MLCBsaWtlIEdlY2tvKSBDaHJvbWUvNzkuMC4zOTQ1Ljg4IFNhZmFyaS81MzcuMzY=
-        x-cds-type: Base64
+        example: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36
     HeaderConsumerIpAddress:
       name: Adatree-Consumer-Ip-Address
       in: header
