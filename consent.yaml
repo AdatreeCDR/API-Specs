@@ -174,6 +174,9 @@ paths:
       summary: Create Consent
       description: Create a consent record for consumer
       operationId: createConsent
+      parameters:
+        - $ref: '#/components/parameters/RequestHeader_x-fapi-customer-ip-address'
+        - $ref: '#/components/parameters/RequestHeader_x-cds-client-headers'
       requestBody:
         content:
           application/json:
@@ -621,10 +624,12 @@ components:
           example: external-id-by-adatree-customer
     CreateConsent:
       type: object
+      required: [sharingEndDate, dataHolderBrandId, useCaseId]
       properties:
         consumerEmail:
           type: string
           example: "consumer@example.com"
+          description: this is required if chosen Use Case uses email as notification channel
         sharingEndDate:
           type: string
           description: sharing end date, will be validated against sharing duration options defined in chosen Use Case
@@ -644,6 +649,7 @@ components:
           example: false
         consumerMobileNumber:
           type: string
+          description: this is required if chosen Use Case uses mobile number as notification channel
           example: "00614000555666"
         externalId:
           type: string
@@ -653,7 +659,7 @@ components:
           type: string
           description: |
             consumeId, please be kindly reminded of proper encoding as Id from some IDP could have special character like '|', which need be encoded as '%7c'. <br/>
-            consumerId is only accepted for backchannel consent creation
+            consumerId is required (and only accepted) for backchannel consent creation
           example: auth0%7c5fbc585628421a006e83d95d
     ConsentAuthorization:
       type: object
@@ -1095,3 +1101,27 @@ components:
         minimum: 1
         example: 25
         x-cds-type: PositiveInteger            
+    RequestHeader_x-cds-client-headers:
+      name: x-cds-client-headers
+      in: header
+      required: true
+      description: The customer's original standard http headers [Base64](#common-field-types)
+        encoded, including the original User Agent header, if the customer is currently
+        logged in to the data recipient. Mandatory for customer present calls.  Not
+        required for unattended or unauthenticated calls.
+        Format of this field is unclear and might be defined in future as discussed in https://github.com/ConsumerDataStandardsAustralia/standards-maintenance/issues/104
+      schema:
+        type: string
+        example: TW96aWxsYS81LjAgKFgxMTsgTGludXggeDg2XzY0KSBBcHBsZVdlYktpdC81MzcuMzYgKEtIVE1MLCBsaWtlIEdlY2tvKSBDaHJvbWUvNzkuMC4zOTQ1Ljg4IFNhZmFyaS81MzcuMzY=
+        x-cds-type: Base64
+    RequestHeader_x-fapi-customer-ip-address:
+      name: x-fapi-customer-ip-address
+      in: header
+      required: true
+      description: The customer's original IP address if the customer is currently
+        logged in to the data recipient. The presence of this header indicates that
+        the API is being called in a customer present context. Not to be included
+        for unauthenticated calls.
+      schema:
+        type: string
+        example: 127.0.0.1
