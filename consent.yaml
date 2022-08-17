@@ -175,8 +175,8 @@ paths:
       description: Create a consent record for consumer
       operationId: createConsent
       parameters:
-        - $ref: '#/components/parameters/RequestHeader_x-fapi-customer-ip-address'
-        - $ref: '#/components/parameters/RequestHeader_x-cds-client-headers'
+        - $ref: '#/components/parameters/HeaderConsumerClientHeaders'
+        - $ref: '#/components/parameters/HeaderConsumerIpAddress'
       requestBody:
         content:
           application/json:
@@ -1101,11 +1101,10 @@ components:
         minimum: 1
         example: 25
         x-cds-type: PositiveInteger            
-    RequestHeader_x-cds-client-headers:
-      name: x-cds-client-headers
+    HeaderConsumerClientHeaders:
+      name: Adatree-Consumer-Client-Headers
       in: header
-      required: true
-      description: The customer's original standard http headers [Base64](#common-field-types)
+      description: Mandatory for consumer present calls using a Machine token. The customer's original standard http headers [Base64](#common-field-types)
         encoded, including the original User Agent header, if the customer is currently
         logged in to the data recipient. Mandatory for customer present calls.  Not
         required for unattended or unauthenticated calls.
@@ -1114,14 +1113,10 @@ components:
         type: string
         example: TW96aWxsYS81LjAgKFgxMTsgTGludXggeDg2XzY0KSBBcHBsZVdlYktpdC81MzcuMzYgKEtIVE1MLCBsaWtlIEdlY2tvKSBDaHJvbWUvNzkuMC4zOTQ1Ljg4IFNhZmFyaS81MzcuMzY=
         x-cds-type: Base64
-    RequestHeader_x-fapi-customer-ip-address:
-      name: x-fapi-customer-ip-address
+    HeaderConsumerIpAddress:
+      name: Adatree-Consumer-Ip-Address
       in: header
-      required: true
-      description: The customer's original IP address if the customer is currently
-        logged in to the data recipient. The presence of this header indicates that
-        the API is being called in a customer present context. Not to be included
-        for unauthenticated calls.
+      description: Mandatory for consumer present calls using a Machine token. The consumer's original IP address.
       schema:
         type: string
         example: 127.0.0.1
