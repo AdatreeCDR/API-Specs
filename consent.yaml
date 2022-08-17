@@ -647,10 +647,6 @@ components:
         directMarketingAllowed:
           type: boolean
           example: false
-        consumerMobileNumber:
-          type: string
-          description: this is required if chosen Use Case uses mobile number as notification channel
-          example: "00614000555666"
         externalId:
           type: string
           description: Adatree's customer can supply an externalId when creating consents to associate with records in its own system
@@ -737,9 +733,6 @@ components:
         directMarketingAllowed:
           type: boolean
           example: false
-        consumerMobileNumber:
-          type: string
-          example: "00614000555666"
         externalId:
           type: string
           description: Adatree's customer can supply an externalId when creating consents to associate with records in its own system
@@ -816,9 +809,6 @@ components:
         consumerEmail:
           type: string
           example: "consumer@example.com"
-        consumerMobileNumber:
-          type: string
-          example: "00614000555666"
     LinksPaginated:
       type: object
       required:
