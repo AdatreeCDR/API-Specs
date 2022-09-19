@@ -201,6 +201,37 @@ paths:
           $ref: '#/components/responses/403Forbidden'
         429:
           $ref: '#/components/responses/429RateLimited'
+  /data/banking/products:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Banking
+      summary: Get Banking Products
+      description: |-
+        Obtain the list of banking products across all data holders in banking industry
+      operationId: getBankingProducts
+      parameters:
+        - $ref: '#/components/parameters/QueryDataHolderBrandIds'
+        - $ref: '#/components/parameters/QueryProductCategory'
+        - $ref: '#/components/parameters/QueryProductIds'
+        - $ref: '#/components/parameters/QueryPage'
+        - $ref: '#/components/parameters/QueryPageSize'
+      responses:
+        200:
+          description: Success
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/BankingProductList'
+        400:
+          $ref: '#/components/responses/400BadRequest'
+        401:
+          $ref: '#/components/responses/401Unauthorised'
+        403:
+          $ref: '#/components/responses/403Forbidden'
+        429:
+          $ref: '#/components/responses/429RateLimited'
   /data/common/customers:
     get:
       tags:
@@ -482,6 +513,15 @@ components:
           $ref: '#/components/schemas/LinksPaginated'
         meta:
           $ref: '#/components/schemas/MetaPaginated'
+    BankingProductList:
+      type: object
+      required:
+        - data
+        - links
+        - meta
+      properties:
+        data:
+          $ref: '#/components/schemas/BankingProductList_data'
     BankingDirectDebitAuthorisationList:
       properties:
         data:
@@ -525,6 +565,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BankingPayeeDetail'
+    BankingProductList_data:
+      required:
+        - products
+      properties:
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/BankingProductDetail'
     BankingDirectDebitAuthorisationList_data:
       type: object
       required:
@@ -2178,6 +2226,244 @@ components:
         - nickname
         - payeeId
         - type
+    BankingProductDetail:
+      allOf:
+        - $ref: '#/components/schemas/BankingProductV3'
+        - type: object
+          properties:
+            bundles:
+              type: array
+              description: An array of bundles that this product participates in.  Each bundle is described by free form information but also by a list of product IDs of the other products that are included in the bundle.  It is assumed that the current product is included in the bundle also
+              items:
+                $ref: '#/components/schemas/BankingProductBundle'
+            features:
+              type: array
+              description: Array of features available for the product
+              items:
+                $ref: '#/components/schemas/BankingProductFeature'
+            constraints:
+              type: array
+              description: Constraints on the application for or operation of the product such as minimum balances or limit thresholds
+              items:
+                $ref: '#/components/schemas/BankingProductConstraint'
+            eligibility:
+              type: array
+              description: Eligibility criteria for the product
+              items:
+                $ref: '#/components/schemas/BankingProductEligibility'
+            fees:
+              type: array
+              description: Fees applicable for the product
+              items:
+                $ref: '#/components/schemas/BankingProductFee'
+            depositRates:
+              type: array
+              description: Interest rates available for deposits
+              items:
+                $ref: '#/components/schemas/BankingProductDepositRate'
+            lendingRates:
+              type: array
+              description: Interest rates charged against lending balances
+              items:
+                $ref: '#/components/schemas/BankingProductLendingRateV2'
+    BankingProductBundle:
+      type: object
+      required:
+        - description
+        - name
+      properties:
+        name:
+          type: string
+          description: Name of the bundle
+          example: homeloanpackage
+        description:
+          type: string
+          description: Description of the bundle
+          example: a home loan package product
+        additionalInfo:
+          type: string
+          description: Display text providing more information on the bundle
+          example: extra info about the bundle product
+        additionalInfoUri:
+          type: string
+          description: Link to a web page with more information on the bundle criteria and benefits
+          example: https://extrainfo.homeloan.example.com.au
+        productIds:
+          type: array
+          description: Array of product IDs for products included in the bundle that are available via the product end points.  Note that this array is not intended to represent a comprehensive model of the products included in the bundle and some products available for the bundle may not be available via the product reference end points
+          example: [ "f632041c-d7c8-4679-a165-aa406cd62b13" ]
+          items:
+            type: string
+    BankingProductV3:
+      type: object
+      required:
+        - brand
+        - description
+        - isTailored
+        - lastUpdated
+        - name
+        - productCategory
+        - productId
+        - dataHolderId
+      properties:
+        productId:
+          type: string
+          description: A data holder specific unique identifier for this product. This identifier must be unique to a product but does not otherwise need to adhere to ID permanence guidelines.
+          example: f632041c-d7c8-4679-a165-aa406cd62b13
+        effectiveFrom:
+          type: string
+          description: The date and time from which this product is effective (ie. is available for origination).  Used to enable the articulation of products to the regime before they are available for customers to originate
+          example: "1997-01-12T15:43:00.121Z"
+        effectiveTo:
+          type: string
+          description: The date and time at which this product will be retired and will no longer be offered.  Used to enable the managed deprecation of products
+          example: "2007-05-01T15:43:00.12345Z"
+        lastUpdated:
+          type: string
+          description: The last date and time that the information for this product was changed (or the creation date for the product if it has never been altered)
+          example: "2019-01-12T15:43:00.121Z"
+        dataHolderId:
+          type: string
+          description: The id of data holder
+          example: "55b3299a-3e50-48a2-a190-cca263ccaba5"
+        dataHolderBrandName:
+          type: string
+          description: The brand name of data holder
+          example: "Red Australia Bank"
+        productCategory:
+          $ref: '#/components/schemas/BankingProductCategory'
+        name:
+          type: string
+          description: The display name of the product
+          example: Budgeting Insights
+        description:
+          type: string
+          description: A description of the product
+          example: Data will be used to advise you on how to manage your budget.
+        brand:
+          type: string
+          description: A label of the brand for the product. Able to be used for filtering. For data holders with single brands this value is still required
+          example: budgetinsights
+        brandName:
+          type: string
+          description: An optional display name of the brand
+          example: Smart Budget
+        applicationUri:
+          type: string
+          description: A link to an application web page where this product can be applied for.
+          example: https://apply.smartbudgets.example.com.au
+        isTailored:
+          type: boolean
+          description: Indicates whether the product is specifically tailored to a circumstance.  In this case fees and prices are significantly negotiated depending on context. While all products are open to a degree of tailoring this flag indicates that tailoring is expected and thus that the provision of specific fees and rates is not applicable
+          example: true
+        additionalInformation:
+          $ref: '#/components/schemas/BankingProductV3_additionalInformation'
+        cardArt:
+          type: array
+          description: An array of card art images
+          items:
+            $ref: '#/components/schemas/BankingProductV3_cardArt'
+    BankingProductConstraint:
+      type: object
+      required:
+        - constraintType
+      properties:
+        constraintType:
+          type: string
+          description: The type of constraint described.  See the next section for an overview of valid values and their meaning
+          example: MAX_BALANCE
+          enum:
+            - MIN_BALANCE
+            - MIN_LIMIT
+            - MAX_BALANCE
+            - MAX_LIMIT
+            - OPENING_BALANCE
+        additionalValue:
+          type: string
+          description: Generic field containing additional information relevant to the [constraintType](#tocSproductconstrainttypedoc) specified.  Whether mandatory or not is dependent on the value of [constraintType](#tocSproductconstrainttypedoc)
+          example: no fees
+        additionalInfo:
+          type: string
+          description: Display text providing more information the constraint
+          example: no limit black card
+        additionalInfoUri:
+          type: string
+          description: Link to a web page with more information on the constraint
+          example: https://productconstraint.example.com.au
+      x-conditional:
+        - additionalValue
+    BankingProductEligibility:
+      type: object
+      required:
+        - eligibilityType
+      properties:
+        eligibilityType:
+          type: string
+          description: The type of eligibility criteria described.  See the next section for an overview of valid values and their meaning
+          example: BUSINESS
+          enum:
+            - BUSINESS
+            - EMPLOYMENT_STATUS
+            - MAX_AGE
+            - MIN_AGE
+            - MIN_INCOME
+            - MIN_TURNOVER
+            - NATURAL_PERSON
+            - PENSION_RECIPIENT
+            - RESIDENCY_STATUS
+            - STAFF
+            - STUDENT
+            - OTHER
+        additionalValue:
+          type: string
+          description: Generic field containing additional information relevant to the [eligibilityType](#tocSproducteligibilitytypedoc) specified. Whether mandatory or not is dependent on the value of [eligibilityType](#tocSproducteligibilitytypedoc)
+          example: additional value for product eligibility
+        additionalInfo:
+          type: string
+          description: Display text providing more information on the [eligibility](#tocSproducteligibilitytypedoc) criteria. Mandatory if the field is set to OTHER
+          example: additional info for product eligibility
+        additionalInfoUri:
+          type: string
+          description: Link to a web page with more information on this eligibility criteria
+          example: https://producteligibility.example.com.au
+      x-conditional:
+        - additionalValue
+        - additionalInfo
+    BankingProductV3_additionalInformation:
+      properties:
+        overviewUri:
+          type: string
+          description: General overview of the product
+          example: https://overview.example.com.au
+        termsUri:
+          type: string
+          description: Terms and conditions for the product
+          example: https://terms.example.com.au
+        eligibilityUri:
+          type: string
+          description: Eligibility rules and criteria for the product
+          example: https://eligiblity.example.com.au
+        feesAndPricingUri:
+          type: string
+          description: Description of fees, pricing, discounts, exemptions and bonuses for the product
+          example: https://feesandpricing.example.com.au
+        bundleUri:
+          type: string
+          description: Description of a bundle that this product can be part of
+          example: https://bundle.example.com.au
+      description: Object that contains links to additional information on specific topics
+    BankingProductV3_cardArt:
+      required:
+        - imageUri
+      properties:
+        title:
+          type: string
+          description: Display label for the specific image
+          example: title image
+        imageUri:
+          type: string
+          description: URI reference to a PNG, JPG or GIF image with proportions defined by ISO 7810 ID-1 and width no greater than 512 pixels. The URI reference may be a link or url-encoded data URI [RFC 2397](https://tools.ietf.org/html/rfc2397)
+          example: https://image12345.example.com.au
     BankingPayeeDetail:
       allOf:
         - $ref: '#/components/schemas/BankingPayee'
@@ -5688,6 +5974,16 @@ components:
           type: string
           description: Array of specific dataHolderBrandIds to obtain data for
           example: 30370f1b-cd27-4d56-b56d-beb49fc9aa48
+    QueryProductIds:
+      name: productIds
+      in: query
+      description: IDs of the specific products
+      schema:
+        type: array
+        items:
+          type: string
+          description: Array of specific productId to obtain data for
+          example: [f632041c-d7c8-4679-a165-aa406cd62b13]
     QueryTransactionOldestRetrievalTime:
       name: oldestRetrievalTime
       in: query
