@@ -563,6 +563,33 @@ components:
           type: string
           description: The logo URI of the data holder you wish the consumer to authenticate with.
           example: https://www.westpac.com.au/logo
+    ConsentUseCaseResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: HOME_LOAN
+        name:
+          type: string
+          example: Home Loan Assessment
+        description:
+          type: string
+          example: Data will be used to assess your eligibility for a home loan.
+        notificationType:
+          $ref: '#/components/schemas/NotificationType'
+        scopes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConsentScopeResponse'
+        consumerType:
+          $ref: '#/components/schemas/ConsumerType'
+        industries:
+          type: array
+          description: list of industries this use-case applies to.
+          items:
+            $ref: '#/components/schemas/Industry'
+        accessFrequency:
+          $ref: '#/components/schemas/AccessFrequency'
     DataHolder:
       required:
         - brandName
@@ -720,7 +747,7 @@ components:
           type: string
           example: https://www.abank.com.au/logo
         useCase:
-          $ref: '#/components/schemas/UseCaseResponse'
+          $ref: '#/components/schemas/ConsentUseCaseResponse'
         postUsageAction:
           $ref: '#/components/schemas/PostUsageAction'
         consumerId:
@@ -741,6 +768,25 @@ components:
           example: external-id-by-adatree-customer
         grantee:
           $ref: '#/components/schemas/Grantee'
+    ConsentScopeResponse:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Bank account name, type and balance
+        id:
+          type: string
+          example: bank:accounts.basic:read
+        purpose:
+          type: string
+          example: "This will allow us to provide the best service of all kinds"
+        description:
+          type: string
+          example: This will allow us to access basic information about your accounts
+        priority:
+          type: integer
+          example: 1
+          format: int32
     ScopeResponse:
       type: object
       properties:
