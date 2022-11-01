@@ -273,6 +273,10 @@ paths:
       operationId: getEnergyPlans
       parameters:
         - $ref: '#/components/parameters/QueryPlanIds'
+        - $ref: '#/components/parameters/QueryPlanTypes'
+        - $ref: '#/components/parameters/QueryPlanFuelTypes'
+        - $ref: '#/components/parameters/QueryPlanEffective'
+        - $ref: '#/components/parameters/QueryPlanUpdatedSince'
         - $ref: '#/components/parameters/QueryDataHolderBrandIds'
         - $ref: '#/components/parameters/QueryPage'
         - $ref: '#/components/parameters/QueryPageSize'
@@ -522,6 +526,10 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/BankingProductList_data'
+        links:
+          $ref: '#/components/schemas/LinksPaginated'
+        meta:
+          $ref: '#/components/schemas/MetaPaginated'
     BankingDirectDebitAuthorisationList:
       properties:
         data:
@@ -1427,13 +1435,18 @@ components:
             - BILL_PAYMENT
             - BONUS_REWARDS
             - CARD_ACCESS
+            - CASHBACK_OFFER
             - COMPLEMENTARY_PRODUCT_DISCOUNTS
             - DIGITAL_BANKING
             - DIGITAL_WALLET
             - DONATE_INTEREST
+            - EXTRA_REPAYMENTS
+            - FRAUD_PROTECTION
             - FREE_TXNS
             - FREE_TXNS_ALLOWANCE
+            - GUARANTOR
             - INSURANCE
+            - INSTALMENT_PLAN
             - INTEREST_FREE
             - INTEREST_FREE_TRANSFERS
             - LOYALTY_PROGRAM
@@ -1441,10 +1454,11 @@ components:
             - NPP_ENABLED
             - NPP_PAYID
             - OFFSET
+            - OTHER
             - OVERDRAFT
             - REDRAW
+            - RELATIONSHIP_MANAGEMENT
             - UNLIMITED_TXNS
-            - OTHER
         additionalValue:
           type: string
           description: Generic field containing additional information relevant to the [featureType](#tocSproductfeaturetypedoc) specified. Whether mandatory or not is dependent on the value of the [featureType.](#tocSproductfeaturetypedoc)
@@ -2055,6 +2069,9 @@ components:
             - "Kids & Family"
             - "Loan & Mortgage"
             - "Office expenses"
+            - "Other Deposits"
+            - "Other transfers"
+            - "Other"
             - "Paycheck, Pensions & Annuity"
             - "Personal Care"
             - "Savings & Investments"
@@ -2064,9 +2081,6 @@ components:
             - "Transportation"
             - "Travel"
             - "Utilities"
-            - "Other Deposits"
-            - "Other transfers"
-            - "Other"
         subCategoryName:
           type: string
           example: "Cash Deposit"
@@ -2082,6 +2096,9 @@ components:
             - "Bars & Pubs"
             - "Beauty Products"
             - "Books & Newspapers"
+            - "Business Credit Card"
+            - "Buy Now Pay Later"
+            - "Cafes & Coffee Shops"
             - "Car Finance"
             - "Car Insurance"
             - "Car Rentals"
@@ -2092,6 +2109,7 @@ components:
             - "Child Care"
             - "Children's Clothings Stores"
             - "Cleaning"
+            - "Commercial Loans"
             - "Construction"
             - "Conversion Fees"
             - "Credit Card Payments"
@@ -2101,12 +2119,14 @@ components:
             - "Digital Entertainment"
             - "Digital Wallet"
             - "Dining"
+            - "Dining Subscriptions"
             - "Direct Debit & Standing Order"
             - "Direct Deposit"
             - "Dividends"
             - "Donations"
             - "Drugs & Pharmacy"
             - "Education"
+            - "Electricity"
             - "Electricity, Water, Gas"
             - "Electronics & Computers"
             - "Electronics"
@@ -2116,11 +2136,14 @@ components:
             - "Fast Food"
             - "Fitness & Leisure"
             - "Furniture"
+            - "Gas"
+            - "Gambling"
             - "Games"
             - "Gardening"
             - "Gas Station"
             - "General Office Expenses"
             - "Government Services"
+            - "Groceries"
             - "Hair, Nails & Beauty Shops"
             - "Hardware & Appliances"
             - "Health & fitness"
@@ -2159,7 +2182,9 @@ components:
             - "P2P"
             - "Parking & Tolls"
             - "Paycheck"
+            - "Paycheck, Pensions & Annuity"
             - "Payday & Pawn & Title Loans"
+            - "Payday Loans"
             - "Pension"
             - "Personal Care"
             - "Personal Loan"
@@ -2172,19 +2197,25 @@ components:
             - "Public Transportation"
             - "Real Estate"
             - "Restaurants"
+            - "Rewards Credit Card"
             - "Savings"
+            - "Secured Credit Card"
             - "Service Fees"
             - "Shipping & Deliveries"
             - "Shopping"
             - "Sport Entertainment"
+            - "Student Credit Card"
             - "Student Loan"
             - "Supermarket, Grocery & Convenience Stores"
             - "Taxes & Authorities"
             - "Taxes, Fines & Bail Bonds"
             - "Taxi"
+            - "Title Loans"
             - "Transfers between own accounts"
             - "Transportation"
             - "Travel"
+            - "Travel Credit Card"
+            - "Travel Insurance"
             - "Utilities"
             - "Vehicle Dealers"
             - "Vehicle Operating Expenses"
@@ -6112,6 +6143,49 @@ components:
         items:
           type: string
           description: Array of specific planIds to filter the result list by
+    QueryPlanTypes:
+      name: planTypes
+      in: query
+      description: Used to filter results on the type field.
+      schema:
+        type: array
+        items:
+          type: string
+          example: STANDING
+          enum:
+            - STANDING
+            - MARKET
+            - REGULATED
+    QueryPlanFuelTypes:
+      name: fuelTypes
+      in: query
+      description: Used to filter results on the fuel type field.
+      schema:
+        type: array
+        items:
+          type: string
+          example: GAS
+          enum:
+            - ELECTRICITY
+            - GAS
+            - DUAL
+    QueryPlanEffective:
+      name: effective
+      in: query
+      description: Used to filter results on the effective field.
+      schema:
+        type: string
+        example: CURRENT
+        enum:
+          - CURRENT
+          - FUTURE
+    QueryPlanUpdatedSince:
+      name: updatedSince
+      in: query
+      description: Used to filter results on the updatedSince field
+      schema:
+        type: string
+        example: "2021-01-12T15:43:00.121Z"
     HeaderConsumerAuthDate:
       name: Adatree-Consumer-Auth-Date
       in: header
@@ -6132,7 +6206,6 @@ components:
       description: User Agent header of the consumer facing application. Mandatory for consumer present calls using a Machine token.
       schema:
         type: string
-        example: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36
   #-------------------------------
   # Reusable responses
   #-------------------------------
