@@ -6206,6 +6206,7 @@ components:
       description: User Agent header of the consumer facing application. Mandatory for consumer present calls using a Machine token.
       schema:
         type: string
+        example: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36
   #-------------------------------
   # Reusable responses
   #-------------------------------
