@@ -5,7 +5,7 @@ info:
   contact:
     name: Adatree
     email: engineering@adatree.com.au
-  version: '1.1.0'
+  version: '1.2.0'
 servers:
   - url: 'https://cdr-insights-prod.api.adatree.com.au'
     description: Server url
@@ -767,7 +767,7 @@ components:
           description: Adatree's customer can supply an externalId when creating consents to associate with records in its own system
           example: external-id-by-adatree-customer
         grantee:
-          $ref: '#/components/schemas/Grantee'
+          $ref: '#/components/schemas/ConsentGrantee'
     ConsentScopeResponse:
       type: object
       properties:
@@ -780,9 +780,6 @@ components:
         purpose:
           type: string
           example: "This will allow us to provide the best service of all kinds"
-        description:
-          type: string
-          example: This will allow us to access basic information about your accounts
         priority:
           type: integer
           example: 1
@@ -926,12 +923,29 @@ components:
           $ref: '#/components/schemas/MetaPaginated'
     Grantee:
       type: object
+      description: a grantee that will access CDR data. Specific configuration is required to support Grantee.
+      required: [name, licenceNumber]
+      properties:
+        name:
+          type: string
+          description: name of a consent grantee, only applicable using a Machine token
+          example: Bob the broker
+        licenceNumber:
+          type: string
+          example: ACL001
+          description: ACL number of a consent grantee, only applicable using a Machine token
+        id:
+          type: string
+          example: f6332cde-655b-4295-9665-7146a74be0f2
+          description: A grantee's UUID. When grantee id is supplied, name and licenceNumber must NOT be supplied. Applicable using a Machine token or a Consumer token
+    ConsentGrantee:
+      type: object
       description: consent grantee that will access CDR data
       required: [name, licenceNumber]
       properties:
         name:
           type: string
-          description: full name
+          description: grantee name
           example: Bob the broker
         licenceNumber:
           type: string
