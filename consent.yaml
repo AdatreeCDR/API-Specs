@@ -924,7 +924,6 @@ components:
     Grantee:
       type: object
       description: a grantee that will access CDR data. Specific configuration is required to support Grantee.
-      required: [name, licenceNumber]
       properties:
         name:
           type: string
