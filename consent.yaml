@@ -768,6 +768,8 @@ components:
           example: external-id-by-adatree-customer
         grantee:
           $ref: '#/components/schemas/ConsentGrantee'
+        serviceProvider:
+          $ref: '#/components/schemas/ServiceProvider'
     ConsentScopeResponse:
       type: object
       properties:
@@ -950,6 +952,22 @@ components:
           type: string
           example: ACL001
           description: ACL number of consent grantee
+    ServiceProvider:
+      type: object
+      description: Grantee's service provider
+      properties:
+        name:
+          type: string
+          description: trusted adviser service provider name
+          example: a cool service provider
+        uri:
+          type: string
+          description: service provider's website or contact info (email, phone number & etc)
+          example: https://wicked.service/policy.html
+        description:
+          type: string
+          description: description of the service provider
+          example: the best service provider ever
     UseCaseResponse:
       type: object
       properties:
