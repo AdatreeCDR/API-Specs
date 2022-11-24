@@ -858,6 +858,8 @@ components:
         consumerEmail:
           type: string
           example: "consumer@example.com"
+        grantee:
+          $ref: '#/components/schemas/ConsentGrantee'
     LinksPaginated:
       type: object
       required:
@@ -952,6 +954,10 @@ components:
           type: string
           example: ACL001
           description: ACL number of consent grantee
+        id:
+          type: string
+          example: 13245551-08e5-499c-bad5-ddd26c0ac261
+          description: grantee id
     ServiceProvider:
       type: object
       description: Grantee's service provider
