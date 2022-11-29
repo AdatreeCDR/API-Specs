@@ -872,7 +872,7 @@ components:
           type: array
           description: The list of energy accounts returned. If the filter results in an empty set then this array may have no records
           items:
-            $ref: '#/components/schemas/EnergyAccountDetail'
+            $ref: '#/components/schemas/EnergyAccountDetailV2'
 
     #-------------------------------
     # Banking Schema Definitions
@@ -3066,7 +3066,6 @@ components:
     #-------------------------------
     # Energy Schema Definitions
     #-------------------------------
-
     EnergyPlanList:
       properties:
         data:
@@ -3138,7 +3137,7 @@ components:
           description: The ID of the specific plan
           type: string
         effectiveFrom:
-          description: The date and time from which this plan is effective (i.e. is
+          description: The date and time from which this plan is effective (ie. is
             available for origination). Used to enable the articulation of products
             to the regime before they are available for customers to originate
           type: string
@@ -3218,12 +3217,12 @@ components:
             next 50kWh at Y cents etc.</li><li>**SINGLE_RATE_CONT_LOAD** - as above,
             but with an additional, separate unit rate charged for all energy usage
             from a controlled load i.e. separately metered appliance like hot water
-            service, pool pump etc.</li><li>**TIME_OF_USE**  usage is charged
+            service, pool pump etc.</li><li>**TIME_OF_USE** - energy usage is charged
             at unit rates that vary dependent on time of day and day of week that
             the energy is consumed</li><li>**TIME_OF_USE_CONT_LOAD** - as above, but
             with an additional, separate unit rate charged for all energy usage from
             a controlled load i.e. separately metered appliance like hot water service,
-            pool pump etc.</li><li>**FLEXIBLE**  usage is charged at unit
+            pool pump etc.</li><li>**FLEXIBLE** - energy usage is charged at unit
             rates that vary based on external factors</li><li>**FLEXIBLE_CONT_LOAD**
             - as above, but with an additional, separate unit rate charged for all
             energy usage from a controlled load i.e. separately metered appliance
@@ -3243,7 +3242,8 @@ components:
           type: string
         timeZone:
           description: Required if pricingModel is set to TIME_OF_USE.  Defines the
-            time zone to use for calculation of the time of use thresholds
+            time zone to use for calculation of the time of use thresholds. Defaults
+            to AEST if absent
           enum:
             - LOCAL
             - AEST
@@ -3253,7 +3253,7 @@ components:
           type: boolean
         variation:
           description: Free text description of price variation policy and conditions
-            for the contract.  Mandatory if isFixed is true
+            for the contract.  Mandatory if `isFixed` is false
           type: string
         onExpiryDescription:
           description: Free text field that describes what will occur on or prior
@@ -3273,7 +3273,189 @@ components:
         intrinsicGreenPower:
           $ref: '#/components/schemas/EnergyPlanContract_intrinsicGreenPower'
         controlledLoad:
-          $ref: '#/components/schemas/EnergyPlanControlledLoad'
+          description: Required if pricing model is SINGLE_RATE_CONT_LOAD or TIME_OF_USE_CONT_LOAD
+            or FLEXIBLE_CONT_LOAD
+          items:
+            properties:
+              displayName:
+                description: A display name for the controlled load
+                type: string
+              rateBlockUType:
+                description: 'Specifies the type of controlloed load rate '
+                enum:
+                  - singleRate
+                  - timeOfUseRates
+                type: string
+              startDate:
+                description: Optional start date of the application of the controlled
+                  load rate
+                type: string
+              endDate:
+                description: Optional end date of the application of the controlled
+                  load rate
+                type: string
+              singleRate:
+                description: Object representing a single controlled load rate.  Required
+                  if rateBlockUType is singleRate
+                properties:
+                  displayName:
+                    description: Display name of the controlled load rate
+                    type: string
+                  description:
+                    description: Description of the controlled load rate
+                    type: string
+                  dailySupplyCharge:
+                    description: The daily supply charge (exclusive of GST) for this
+                      controlled load tier
+                    type: string
+                  rates:
+                    description: Array of controlled load rates in order of usage
+                      volume
+                    items:
+                      properties:
+                        unitPrice:
+                          description: Unit price of usage per  measure unit (exclusive
+                            of GST)
+                          type: string
+                        measureUnit:
+                          description: The measurement unit of rate. Assumed to be
+                            KWH if absent
+                          enum:
+                            - KWH
+                            - KVA
+                            - KVAR
+                            - KVARH
+                            - KW
+                            - DAYS
+                            - METER
+                            - MONTH
+                          type: string
+                        volume:
+                          description: Volume in kWh that this rate applies to.  Only
+                            applicable for stepped rates where different rates apply
+                            for different volumes of usage in a period
+                          type: number
+                      required:
+                        - unitPrice
+                      type: object
+                    type: array
+                required:
+                  - displayName
+                  - rates
+                type: object
+              timeOfUseRates:
+                description: Array of objects representing time of use rates.  Required
+                  if rateBlockUType is timeOfUseRates
+                items:
+                  properties:
+                    displayName:
+                      description: Display name of the controlled load rate
+                      type: string
+                    description:
+                      description: Description of the controlled load rate
+                      type: string
+                    dailySupplyCharge:
+                      description: The daily supply charge (exclusive of GST) for
+                        this controlled load tier
+                      type: string
+                    rates:
+                      description: Array of controlled load rates in order of usage
+                        volume
+                      items:
+                        properties:
+                          unitPrice:
+                            description: Unit price of usage per  measure unit (exclusive
+                              of GST)
+                            type: string
+                          measureUnit:
+                            description: The measurement unit of rate. Assumed to
+                              be KWH if absent
+                            enum:
+                              - KWH
+                              - KVA
+                              - KVAR
+                              - KVARH
+                              - KW
+                              - DAYS
+                              - METER
+                              - MONTH
+                            type: string
+                          volume:
+                            description: Volume in kWh that this rate applies to.  Only
+                              applicable for stepped rates where different rates
+                              apply for different volumes of usage in a period
+                            type: number
+                        required:
+                          - unitPrice
+                        type: object
+                      type: array
+                    timeOfUse:
+                      description: Array of times of use.
+                      items:
+                        properties:
+                          days:
+                            description: The days that the rate applies to
+                            items:
+                              enum:
+                                - SUN
+                                - MON
+                                - TUE
+                                - WED
+                                - THU
+                                - FRI
+                                - SAT
+                                - PUBLIC_HOLIDAYS
+                              type: string
+                            type: array
+                          startTime:
+                            description: The beginning of the time period per day
+                              for which the controlled load rate applies. Required
+                              if endTime provided
+                            type: string
+                          endTime:
+                            description: The end of the time period per day for which
+                              the controlled load rate applies. Required if startTime
+                              provided
+                            type: string
+                          additionalInfo:
+                            description: Display text providing more information on
+                              the contrlled load, for e.g. controlled load availability
+                              if specific day/time is not known. Required if startTime
+                              and endTime absent or if additionalInfoUri provided
+                            type: string
+                          additionalInfoUri:
+                            description: Optional link to additional information regarding
+                              the controlled load
+                            type: string
+                        type: object
+                        x-conditional:
+                          - startTime
+                          - endTime
+                          - additionalInfo
+                      type: array
+                    type:
+                      description: The type of usage that the rate applies to
+                      enum:
+                        - PEAK
+                        - OFF_PEAK
+                        - SHOULDER
+                        - SOLAR_SPONGE
+                      type: string
+                  required:
+                    - displayName
+                    - rates
+                    - timeOfUse
+                    - type
+                  type: object
+                type: array
+            required:
+              - displayName
+              - rateBlockUType
+            type: object
+            x-conditional:
+              - singleRate
+              - timeOfUseRates
+          type: array
         incentives:
           description: Optional list of incentives available for the contract
           items:
@@ -3605,29 +3787,32 @@ components:
                     items:
                       properties:
                         days:
-                          properties:
-                            weekdays:
-                              description: Indicates whether the tariff is applicable
-                                Monday to Friday
-                              type: boolean
-                            weekend:
-                              description: Indicates whether the tariff is applicable
-                                Saturday and Sunday
-                              type: boolean
-                          required:
-                            - weekdays
-                            - weekend
-                          type: object
+                          description: The days that the tariff applies to. At least
+                            one entry required
+                          items:
+                            enum:
+                              - SUN
+                              - MON
+                              - TUE
+                              - WED
+                              - THU
+                              - FRI
+                              - SAT
+                              - PUBLIC_HOLIDAYS
+                            type: string
+                          type: array
                         startTime:
                           description: The beginning of the time period per day for
                             which the tariff applies.  If absent assumes start of
-                            day (i.e. midnight)
+                            day (ie. midnight)
                           type: string
                         endTime:
                           description: The end of the time period per day for which
-                            the tariff applies.  If absent assumes end of day (i.e.
+                            the tariff applies.  If absent assumes end of day (ie.
                             one second before midnight)
                           type: string
+                      required:
+                        - days
                       type: object
                     type: array
                 required:
@@ -3675,7 +3860,9 @@ components:
                   dollars per day exclusive of GST.
                 type: string
               timeZone:
-                description: Specifies the charge specific time zone for calculation of the time of use thresholds. If absent, timezone value in EnergyPlanContract is assumed.
+                description: Specifies the charge specific time zone for calculation
+                  of the time of use thresholds. If absent, timezone value in EnergyPlanContract
+                  is assumed.
                 enum:
                   - LOCAL
                   - AEST
@@ -3795,23 +3982,21 @@ components:
                             description: The days that the rate applies to
                             items:
                               enum:
-                                - SUNDAY
-                                - MONDAY
-                                - TUESDAY
-                                - WEDNESDAY
-                                - THURSDAY
-                                - FRIDAY
-                                - SATURDAY
-                                - BUSINESS_DAYS
+                                - SUN
+                                - MON
+                                - TUE
+                                - WED
+                                - THU
+                                - FRI
+                                - SAT
+                                - PUBLIC_HOLIDAYS
                               type: string
                             type: array
                           startTime:
-                            description: Start of the period in HHMM format using
-                              24 hour clock format
+                            description: Start of the period
                             type: string
                           endTime:
-                            description: End of the period in HHMM format using 24
-                              hour clock format
+                            description: End of the period
                             type: string
                         required:
                           - days
@@ -3864,33 +4049,25 @@ components:
                         - MONTH
                       type: string
                     startTime:
-                      description: Start of the period in HHMM format using 24 hour
-                        clock format
+                      description: Start of the period
                       type: string
                     endTime:
-                      description: End of the period in HHMM format using 24 hour
-                        clock format
+                      description: End of the period
                       type: string
                     days:
-                      description: Object containing demand tariff by day of week
-                      properties:
-                        weekdays:
-                          description: Indicates the demand tariff is applicable on
-                            weekdays
-                          type: boolean
-                        saturday:
-                          description: Indicates the demand tariff is applicable on
-                            Saturdays
-                          type: boolean
-                        sunday:
-                          description: Indicates the demand tariff is applicable on
-                            Sundays
-                          type: boolean
-                      required:
-                        - saturday
-                        - sunday
-                        - weekdays
-                      type: object
+                      description: The days that the demand tariff applies to
+                      items:
+                        enum:
+                          - SUN
+                          - MON
+                          - TUE
+                          - WED
+                          - THU
+                          - FRI
+                          - SAT
+                          - PUBLIC_HOLIDAYS
+                        type: string
+                      type: array
                     minDemand:
                       description: Minimum demand for this demand tariff in kW.  If
                         absent then 0 is assumed
@@ -3947,35 +4124,87 @@ components:
       allOf:
         - $ref: '#/components/schemas/EnergyPlanContract'
         - $ref: '#/components/schemas/EnergyPlanContractFull_allOf'
-    EnergyPlanControlledLoad:
-      description: Required if pricing model is SINGLE_RATE_CONT_LOAD or TIME_OF_USE_CONT_LOAD
-        or FLEXIBLE_CONT_LOAD
+    EnergyServicePoint:
       properties:
-        displayName:
-          description: A display name for the controlled load tier
+        servicePointId:
+          description: Tokenised ID of the service point to be used for referring
+            to the service point in the CDR API suite. To be created in accordance
+            with CDR ID permanence requirements
           type: string
-        description:
-          description: A description of the controlled load tier
+        nationalMeteringId:
+          description: The independent ID of the service point, known in the industry
+            as the NMI
           type: string
-        dailyCharge:
-          description: The daily supply charge (exclusive of GST) for this controlled
-            load tier
+        servicePointClassification:
+          description: The classification of the service point as defined in MSATS
+            procedures
+          enum:
+            - EXTERNAL_PROFILE
+            - GENERATOR
+            - LARGE
+            - SMALL
+            - WHOLESALE
+            - NON_CONTEST_UNMETERED_LOAD
+            - NON_REGISTERED_EMBEDDED_GENERATOR
+            - DISTRIBUTION_WHOLESALE
           type: string
-        period:
-          description: The period for which the controlled load rate applies. Formatted
-            according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations)
-            (excludes recurrence syntax)
+        servicePointStatus:
+          description: 'Code used to indicate the status of the service point. Note
+            the details for the enumeration values below:<ul><li>**ACTIVE** - An active,
+            energised, service point</li><li>**DE_ENERGISED** - The service point
+            exists but is deenergised</li><li>**EXTINCT** - The service point has
+            been permanently decommissioned</li><li>**GREENFIELD** - Applies to a
+            service point that has never been energised</li><li>**OFF_MARKET** - Applies
+            when the service point is no longer settled in the NEM</li></ul> '
+          enum:
+            - ACTIVE
+            - DE_ENERGISED
+            - EXTINCT
+            - GREENFIELD
+            - OFF_MARKET
           type: string
-        rates:
-          description: Array of controlled load rates in order of usage volume
-          items:
-            $ref: '#/components/schemas/EnergyPlanControlledLoad_rates'
-          type: array
+        jurisdictionCode:
+          description: Jurisdiction code to which the service point belongs.This code
+            defines the jurisdictional rules which apply to the service point. Note
+            the details of enumeration values below:<ul><li>**ALL** - All Jurisdictions</li><li>**ACT**
+            - Australian Capital Territory</li><li>**NEM** - National Electricity
+            Market</li><li>**NSW** - New South Wales</li><li>**QLD** - Queensland</li><li>**SA**
+            - South Australia</li><li>**TAS** - Tasmania</li><li>**VIC** - Victoria</li></ul>
+          enum:
+            - ALL
+            - ACT
+            - NEM
+            - NSW
+            - QLD
+            - SA
+            - TAS
+            - VIC
+          type: string
+        isGenerator:
+          description: This flag determines whether the energy at this connection
+            point is to be treated as consumer load or as a generating unit(this may
+            include generator auxiliary loads). If absent defaults to false. <br>**Note:**
+            Only applicable for scheduled or semischeduled generators, does not indicate
+            on site generation by consumer
+          type: boolean
+        validFromDate:
+          description: The latest start date from which the constituent data sets
+            of this service point became valid
+          type: string
+        lastUpdateDateTime:
+          description: The date and time that the information for this service point
+            was modified
+          type: string
+        consumerProfile:
+          $ref: '#/components/schemas/EnergyServicePoint_consumerProfile'
       required:
-        - dailyCharge
-        - displayName
-        - period
-        - rates
+        - jurisdictionCode
+        - lastUpdateDateTime
+        - nationalMeteringId
+        - servicePointClassification
+        - servicePointId
+        - servicePointStatus
+        - validFromDate
       type: object
     EnergyServicePointDetail:
       properties:
@@ -4040,7 +4269,8 @@ components:
             on site generation by consumer
           type: boolean
         validFromDate:
-          description: The start date from which this service point first became valid
+          description: The latest start date from which the constituent data sets
+            of this service point became valid
           type: string
         lastUpdateDateTime:
           description: The date and time that the information for this service point
@@ -4055,8 +4285,10 @@ components:
             $ref: '#/components/schemas/EnergyServicePointDetail_relatedParticipants'
           type: array
         location:
-          $ref: '#/components/schemas/EnergyServicePointDetail_location'
+          $ref: '#/components/schemas/CommonPhysicalAddress'
         meters:
+          description: The meters associated with the service point. This may be empty
+            where there are no meters physically installed at the service point
           items:
             $ref: '#/components/schemas/EnergyServicePointDetail_meters'
           type: array
@@ -4091,7 +4323,7 @@ components:
           description: Register suffix of the meter register where the meter reads
             are obtained
           type: string
-        meterID:
+        meterId:
           description: Meter id/serial number as it appears in customers bill. ID
             permanence rules do not apply.
           type: string
@@ -4100,17 +4332,18 @@ components:
             under a Controlled Load regime
           type: boolean
         readStartDate:
-          description: Date time when the meter reads start
+          description: Date when the meter reads start in AEST and assumed to start
+            from 12:00 am AEST.
           type: string
         readEndDate:
-          description: Date time when the meter reads end.  If absent then assumed
+          description: Date when the meter reads end in AEST.  If absent then assumed
             to be equal to readStartDate.  In this case the entry represents data
-            for a single date specified by readStartDate
+            for a single date specified by readStartDate.
           type: string
         unitOfMeasure:
           description: Unit of measure of the meter reads. Refer to Appendix B of
             <a href='https://www.aemo.com.au/-/media/files/stakeholder_consultation/consultations/nem-consultations/2019/5ms-metering-package-2/final-determination/mdff-specification-nem12-nem13-v21-final-determination-clean.pdf?la=en&hash=03FCBA0D60E091DE00F2361AE76206EA'>MDFF
-            Specification NEM12 NEM13 v2.1</a> for a list of possible values
+            Specification NEM12 NEM13 v2.1</a> for a list of possible values.
           type: string
         readUType:
           description: Specify the type of the meter read data
@@ -4143,18 +4376,27 @@ components:
           type: string
         approvedCapacity:
           description: Approved small generating unit capacity as agreed with NSP
-            in the connection agreement, expressed in kVA
+            in the connection agreement, expressed in kVA. Value of 0 indicates no
+            DER record exists for the given servicePointId
           type: number
         availablePhasesCount:
-          description: The number of phases available for the installation of DER
-          type: number
+          description: The number of phases available for the installation of DER.
+            Acceptable values are 0, 1, 2 or 3. Value of 0 indicates no DER record
+            exists for the given servicePointId
+          maximum: 3
+          minimum: 0
+          type: integer
         installedPhasesCount:
-          description: The number of phases that DER is connected to
-          type: number
+          description: The number of phases that DER is connected to. Acceptable values
+            are 0, 1, 2 or 3. Value of 0 indicates no DER record exists for the given
+            servicePointId
+          maximum: 3
+          minimum: 0
+          type: integer
         islandableInstallation:
           description: For identification of small generating units designed with
             the ability to operate in an islanded mode
-          type: string
+          type: boolean
         hasCentralProtectionControl:
           default: false
           description: For DER installations where NSPs specify the need for additional
@@ -4178,7 +4420,7 @@ components:
       type: object
       x-conditional:
         - protectionMode
-    EnergyAccountDetail:
+    EnergyAccountBaseV2:
       properties:
         accountId:
           description: The ID of the account.  To be created in accordance with CDR
@@ -4194,33 +4436,31 @@ components:
             be derived.  The content of this field is at the discretion of the data
             holder
           type: string
+        openStatus:
+          default: OPEN
+          description: Open or closed status for the account. If not present then
+            OPEN is assumed
+          enum:
+            - CLOSED
+            - OPEN
+          type: string
         creationDate:
-          description: The date that the account was created or opened
+          description: The date that the account was created or opened. Mandatory
+            if openStatus is OPEN
           type: string
-        balance:
-          description: The current balance of the account.  A positive value indicates
-            that amount is owing to be paid.  A negative value indicates that the
-            account is in credit
-          type: string
-        plans:
-          description: The array of plans containing service points and associated plan details
-          items:
-            $ref: '#/components/schemas/EnergyAccountDetailPlan'
-          type: array
-        paymentSchedule:
-          $ref: '#/components/schemas/EnergyPaymentSchedule'
-        concessions:
-          description: Array may be empty if no concessions exist
-          items:
-            $ref: '#/components/schemas/EnergyConcession'
-          type: array
-        adatree:
-          $ref: '#/components/schemas/Adatree'
+          x-cds-type: DateString
       required:
         - accountId
         - creationDate
-        - adatree
-        - plans
+      type: object
+    EnergyAccountV2:
+      allOf:
+        - $ref: '#/components/schemas/EnergyAccountBaseV2'
+        - $ref: '#/components/schemas/EnergyAccountV2_allOf'
+    EnergyAccountDetailV2:
+      allOf:
+        - $ref: '#/components/schemas/EnergyAccountBaseV2'
+        - $ref: '#/components/schemas/EnergyAccountDetailV2_allOf'
     EnergyPaymentSchedule:
       properties:
         amount:
@@ -4233,11 +4473,14 @@ components:
             - cardDebit
             - directDebit
             - manualPayment
+            - digitalWallet
           type: string
         cardDebit:
           $ref: '#/components/schemas/EnergyPaymentSchedule_cardDebit'
         directDebit:
           $ref: '#/components/schemas/EnergyPaymentSchedule_directDebit'
+        digitalWallet:
+          $ref: '#/components/schemas/EnergyPaymentSchedule_digitalWallet'
         manualPayment:
           $ref: '#/components/schemas/EnergyPaymentSchedule_manualPayment'
       required:
@@ -4247,6 +4490,7 @@ components:
         - cardDebit
         - directDebit
         - manualPayment
+        - digitalWallet
     EnergyConcession:
       example:
         amount: amount
@@ -4391,11 +4635,11 @@ components:
             by the invoice (exclusive of GST)
           type: string
         totalOnceOffCharges:
-          description: The aggregate total of any once-off charges arising from electricity
+          description: The aggregate total of any once off charges arising from electricity
             usage for the period covered by the invoice (exclusive of GST)
           type: string
         totalOnceOffDiscounts:
-          description: The aggregate total of any once-off discounts or credits arising
+          description: The aggregate total of any once off discounts or credits arising
             from electricity usage for the period covered by the invoice (exclusive
             of GST)
           type: string
@@ -4426,11 +4670,11 @@ components:
             by the invoice (exclusive of GST)
           type: string
         totalOnceOffCharges:
-          description: The aggregate total of any once-off charges arising from electricity
+          description: The aggregate total of any once off charges arising from electricity
             usage for the period covered by the invoice (exclusive of GST)
           type: string
         totalOnceOffDiscounts:
-          description: The aggregate total of any once-off discounts or credits arising
+          description: The aggregate total of any once off discounts or credits arising
             from electricity usage for the period covered by the invoice (exclusive
             of GST)
           type: string
@@ -4703,6 +4947,16 @@ components:
         description:
           description: A free text description of the item
           type: string
+        calculationFactors:
+          description: Additional calculation factors that inform the transaction
+          items:
+            $ref: '#/components/schemas/EnergyBillingUsageTransaction_calculationFactors'
+          type: array
+        adjustments:
+          description: Optional array of adjustments arising for this transaction
+          items:
+            $ref: '#/components/schemas/EnergyBillingUsageTransaction_adjustments'
+          type: array
       required:
         - amount
         - description
@@ -4749,7 +5003,8 @@ components:
     EnergyUsageList_data:
       properties:
         reads:
-          description: Array of meter reads
+          description: Array of meter reads sorted by NMI in ascending order followed
+            by readStartDate in descending order
           items:
             $ref: '#/components/schemas/EnergyUsageRead'
           type: array
@@ -4759,7 +5014,7 @@ components:
     EnergyInvoiceList_data:
       properties:
         invoices:
-          description: Array of invoices sorted by date in descending order
+          description: Array of invoices sorted by issue date in descending order
           items:
             $ref: '#/components/schemas/EnergyInvoice'
           type: array
@@ -4877,6 +5132,14 @@ components:
           items:
             type: string
           type: array
+        distributors:
+          description: Array of distributors for the plan. Must have at least one
+            entry
+          items:
+            type: string
+          type: array
+      required:
+        - distributors
       type: object
     EnergyPlanDetail_allOf_meteringCharges:
       properties:
@@ -4974,19 +5237,6 @@ components:
         - benefitPeriod
         - variation
         - coolingOffDays
-    EnergyPlanControlledLoad_rates:
-      properties:
-        unitPrice:
-          description: Unit price of usage per kWh (exclusive of GST)
-          type: string
-        volume:
-          description: Volume in kWh that this rate applies to.  Only applicable for
-            stepped rates where different rates apply for different volumes of usage
-            in a period
-          type: number
-      required:
-        - unitPrice
-      type: object
     EnergyServicePoint_consumerProfile:
       properties:
         classification:
@@ -5050,158 +5300,10 @@ components:
             - DRSP
           type: string
       required:
-        - location
         - party
         - role
       type: object
-    EnergyServicePointDetail_location_simple:
-      description: The address of the service point.  Mandatory if addressUType is
-        set to simple
-      properties:
-        mailingName:
-          description: Name of the individual or business formatted for inclusion
-            in an address used for physical mail
-          type: string
-        addressLine1:
-          description: First line of the standard address object
-          type: string
-        addressLine2:
-          description: Second line of the standard address object
-          type: string
-        addressLine3:
-          description: Third line of the standard address object
-          type: string
-        postcode:
-          description: Mandatory for Australian addresses
-          type: string
-        city:
-          description: Name of the city or locality
-          type: string
-        state:
-          description: Free text if the country is not Australia. If country is Australia
-            then must be one of the values defined by the [State Type Abbreviation](https://auspost.com.au/content/dam/auspost_corp/media/documents/australia-post-data-guide.pdf)
-            in the PAF file format. NSW, QLD, VIC, NT, WA, SA, TAS, ACT, AAT
-          type: string
-        country:
-          default: AUS
-          description: A valid [ISO 3166 Alpha-3](https://www.iso.org/iso-3166-country-codes.html)
-            country code. Australia (AUS) is assumed if country is not present.
-          type: string
-      required:
-        - addressLine1
-        - city
-        - state
-      type: object
-      x-conditional:
-        - postcode
-    EnergyServicePointDetail_location_paf:
-      description: The address of the service point.  Mandatory if addressUType is
-        set to paf. Formatted according to the file format defined by the [PAF file
-        format](https://auspost.com.au/content/dam/auspost_corp/media/documents/australia-post-data-guide.pdf)
-      properties:
-        dpid:
-          description: Unique identifier for an address as defined by Australia Post.  Also
-            known as Delivery Point Identifier
-          type: string
-        thoroughfareNumber1:
-          description: Thoroughfare number for a property (first number in a property
-            ranged address)
-          type: integer
-        thoroughfareNumber1Suffix:
-          description: Suffix for the thoroughfare number. Only relevant is thoroughfareNumber1
-            is populated
-          type: string
-        thoroughfareNumber2:
-          description: Second thoroughfare number (only used if the property has a
-            ranged address eg 23-25)
-          type: integer
-        thoroughfareNumber2Suffix:
-          description: Suffix for the second thoroughfare number. Only relevant is
-            thoroughfareNumber2 is populated
-          type: string
-        flatUnitType:
-          description: Type of flat or unit for the address
-          type: string
-        flatUnitNumber:
-          description: Unit number (including suffix, if applicable)
-          type: string
-        floorLevelType:
-          description: Type of floor or level for the address
-          type: string
-        floorLevelNumber:
-          description: Floor or level number (including alpha characters)
-          type: string
-        lotNumber:
-          description: Allotment number for the address
-          type: string
-        buildingName1:
-          description: Building/Property name 1
-          type: string
-        buildingName2:
-          description: Building/Property name 2
-          type: string
-        streetName:
-          description: The name of the street
-          type: string
-        streetType:
-          description: The street type. Valid enumeration defined by Australia Post
-            PAF code file
-          type: string
-        streetSuffix:
-          description: The street type suffix. Valid enumeration defined by Australia
-            Post PAF code file
-          type: string
-        postalDeliveryType:
-          description: Postal delivery type. (eg. PO BOX). Valid enumeration defined
-            by Australia Post PAF code file
-          type: string
-        postalDeliveryNumber:
-          description: Postal delivery number if the address is a postal delivery
-            type
-          type: integer
-        postalDeliveryNumberPrefix:
-          description: Postal delivery number prefix related to the postal delivery
-            number
-          type: string
-        postalDeliveryNumberSuffix:
-          description: Postal delivery number suffix related to the postal delivery
-            number
-          type: string
-        localityName:
-          description: Full name of locality
-          type: string
-        postcode:
-          description: Postcode for the locality
-          type: string
-        state:
-          description: State in which the address belongs. Valid enumeration defined
-            by Australia Post PAF code file [State Type Abbreviation](https://auspost.com.au/content/dam/auspost_corp/media/documents/australia-post-data-guide.pdf).
-            NSW, QLD, VIC, NT, WA, SA, TAS, ACT, AAT
-          type: string
-      required:
-        - localityName
-        - postcode
-        - state
-      type: object
-    EnergyServicePointDetail_location:
-      properties:
-        addressUType:
-          description: The type of address object present
-          enum:
-            - simple
-            - paf
-          type: string
-        simple:
-          $ref: '#/components/schemas/EnergyServicePointDetail_location_simple'
-        paf:
-          $ref: '#/components/schemas/EnergyServicePointDetail_location_paf'
-      required:
-        - addressUType
-      type: object
-      x-conditional:
-        - simple
-        - paf
-    EnergyServicePointDetail_meters_specifications:
+    EnergyServicePointDetail_specifications:
       description: Technical characteristics of the meter
       properties:
         status:
@@ -5275,8 +5377,7 @@ components:
         - installationType
         - status
       type: object
-    EnergyServicePointDetail_meters_registers:
-      description: Usage data registers available from the meter
+    EnergyServicePointDetail_registers:
       properties:
         registerId:
           description: Unique identifier of the register within this service point.  Is
@@ -5343,7 +5444,6 @@ components:
       required:
         - registerConsumptionType
         - registerId
-        - registerSuffix
       type: object
     EnergyServicePointDetail_meters:
       properties:
@@ -5353,14 +5453,15 @@ components:
             unique
           type: string
         specifications:
-          $ref: '#/components/schemas/EnergyServicePointDetail_meters_specifications'
+          $ref: '#/components/schemas/EnergyServicePointDetail_specifications'
         registers:
+          description: Usage data registers available from the meter. This may be
+            empty where there are no meters physically installed at the service point
           items:
-            $ref: '#/components/schemas/EnergyServicePointDetail_meters_registers'
+            $ref: '#/components/schemas/EnergyServicePointDetail_registers'
           type: array
       required:
         - meterId
-        - registers
         - specifications
       type: object
     EnergyUsageRead_basicRead:
@@ -5382,53 +5483,68 @@ components:
       required:
         - value
       type: object
-    EnergyUsageRead_intervalRead_intervalReads:
+    EnergyUsageRead_intervalRead_readQualities:
       properties:
+        startInterval:
+          description: Start interval for read quality flag. First read begins at
+            1
+          type: integer
+        endInterval:
+          description: End interval for read quality flag
+          type: integer
         quality:
-          default: ACTUAL
-          description: The quality of the read taken.  If absent then assumed to be
-            ACTUAL
+          description: The quality of the read taken
           enum:
-            - ACTUAL
             - SUBSTITUTE
             - FINAL_SUBSTITUTE
           type: string
-        value:
-          description: Interval value.  If positive then it means consumption, if
-            negative it means export
-          type: number
       required:
-        - value
+        - endInterval
+        - quality
+        - startInterval
       type: object
     EnergyUsageRead_intervalRead:
       description: Mandatory if readUType is set to intervalRead
       properties:
         readIntervalLength:
-          description: Read interval length in minutes
+          description: Read interval length in minutes. Required when interval-reads
+            query parameter equals FULL or MIN_30
           type: integer
         aggregateValue:
           description: The aggregate sum of the interval read values. If positive
             then it means net consumption, if negative it means net export
           type: number
         intervalReads:
-          description: Array of reads with each element indicating the read for the
+          description: Array of Interval read values. If positive then it means consumption,
+            if negative it means export. Required when interval-reads query parameter
+            equals FULL or  MIN_30.<br>Each read value indicates the read for the
             interval specified by readIntervalLength beginning at midnight of readStartDate
             (for example 00:00 to 00:30 would be the first reading in a 30 minute
             Interval)
           items:
-            $ref: '#/components/schemas/EnergyUsageRead_intervalRead_intervalReads'
+            type: number
+          type: array
+        readQualities:
+          description: ' Specifies quality of reads that are not ACTUAL.  For read
+            indices that are not specified, quality is assumed to be ACTUAL. If not
+            present, all quality of all reads are assumed to be actual. Required when
+            interval-reads query parameter equals FULL or MIN_30'
+          items:
+            $ref: '#/components/schemas/EnergyUsageRead_intervalRead_readQualities'
           type: array
       required:
         - aggregateValue
-        - intervalReads
-        - readIntervalLength
       type: object
+      x-conditional:
+        - readIntervalLength
+        - intervalReads
+        - readQualities
     EnergyDerRecord_protectionMode:
       description: Required only when the hasCentralProtectionAndControl flag is set
         to true.  One or more of the object fields will be provided to describe the
         protection modes in place
       properties:
-        exportLimitkva:
+        exportLimitKva:
           description: Maximum amount of power (kVA) that may be exported from a connection
             point to the grid, as monitored by a control / relay function. An absent
             value indicates no limit
@@ -5461,7 +5577,7 @@ components:
           description: Sustained over voltage.
           type: number
         sustainedOverVoltageDelay:
-          description: Trip delay time in seconds.
+          description: Sustained Over voltage protection delay in seconds.
           type: number
         frequencyRateOfChange:
           description: Rate of change of frequency trip point (Hz/s).
@@ -5485,7 +5601,7 @@ components:
           type: number
         count:
           description: Number of devices in the group of DER devices
-          type: number
+          type: integer
         manufacturer:
           description: The name of the device manufacturer. If absent then assumed
             to be unknown
@@ -5524,12 +5640,12 @@ components:
         nominalRatedCapacity:
           description: Maximum output in kVA that is listed in the product specification
             by the manufacturer. This refers to the capacity of each unit within the
-            device group
+            device group. Default is 0 if value not known
           type: number
         nominalStorageCapacity:
           description: Maximum storage capacity in kVAh. This refers to the capacity
             of each storage module within the device group. Mandatory if type is equal
-            to STORAGE
+            to STORAGE. Default is 0 if value not known
           type: number
       required:
         - count
@@ -5581,7 +5697,8 @@ components:
           type: string
         inverterDeviceCapacity:
           description: The rated AC output power that is listed in the product specified
-            by the manufacturer. Mandatory if equipmentType is INVERTER
+            by the manufacturer. Mandatory if equipmentType is INVERTER. Default is
+            0 if value not known
           type: number
         derDevices:
           items:
@@ -5599,7 +5716,8 @@ components:
         - inverterSeries
         - inverterModelNumber
         - inverterDeviceCapacity
-    EnergyAccountPlanOverview:
+    EnergyAccountV2_allOf_planOverview:
+      description: Mandatory if openStatus is OPEN
       properties:
         displayName:
           description: The name of the plan if one exists
@@ -5613,8 +5731,42 @@ components:
       required:
         - startDate
       type: object
-    EnergyAccountDetailPlanDetail:
-      description: Detail on the plan applicable to this account
+    EnergyAccountV2_allOf_plans:
+      properties:
+        nickname:
+          description: Optional display name for the plan provided by the customer
+            to help differentiate multiple plans
+          type: string
+        servicePointIds:
+          description: An array of servicePointIds, representing NMIs, that this plan
+            is linked to.  If there are no service points allocated to this plan then
+            an empty array would be expected
+          items:
+            type: string
+          type: array
+        planOverview:
+          $ref: '#/components/schemas/EnergyAccountV2_allOf_planOverview'
+      required:
+        - servicePointIds
+      type: object
+      x-conditional:
+        - planOverview
+    EnergyAccountV2_allOf:
+      description: The array of plans containing service points and associated plan
+        details
+      properties:
+        plans:
+          description: The array of plans containing service points and associated
+            plan details
+          items:
+            $ref: '#/components/schemas/EnergyAccountV2_allOf_plans'
+          type: array
+      required:
+        - plans
+      type: object
+    EnergyAccountDetailV2_allOf_planDetail:
+      description: Detail on the plan applicable to this account. Mandatory if openStatus
+        is OPEN
       properties:
         fuelType:
           description: The fuel types covered by the plan
@@ -5646,7 +5798,7 @@ components:
       x-conditional:
         - gasContract
         - electricityContract
-    EnergyAccountDetailAuthorisedContacts:
+    EnergyAccountDetailV2_allOf_authorisedContacts:
       properties:
         firstName:
           description: For people with single names this field need not be present.
@@ -5671,7 +5823,7 @@ components:
       required:
         - lastName
       type: object
-    EnergyAccountDetailPlan:
+    EnergyAccountDetailV2_allOf_plans:
       properties:
         nickname:
           description: Optional display name for the plan provided by the customer
@@ -5684,19 +5836,48 @@ components:
             type: string
           type: array
         planOverview:
-          $ref: '#/components/schemas/EnergyAccountPlanOverview'
+          $ref: '#/components/schemas/EnergyAccountV2_allOf_planOverview'
         planDetail:
-          $ref: '#/components/schemas/EnergyAccountDetailPlanDetail'
+          $ref: '#/components/schemas/EnergyAccountDetailV2_allOf_planDetail'
         authorisedContacts:
           description: An array of additional contacts that are authorised to act
             on this account
           items:
-            $ref: '#/components/schemas/EnergyAccountDetailAuthorisedContacts'
+            $ref: '#/components/schemas/EnergyAccountDetailV2_allOf_authorisedContacts'
           type: array
       required:
-        - planDetail
-        - planOverview
         - servicePointIds
+      type: object
+      x-conditional:
+        - planOverview
+        - planDetail
+    EnergyAccountDetailV2_allOf:
+      description: The array of plans containing service points and associated plan
+        details
+      properties:
+        balance:
+          description: The current balance of the account.  A positive value indicates
+            that amount is owing to be paid.  A negative value indicates that the
+            account is in credit
+          type: string
+        plans:
+          description: The array of plans containing service points and associated
+            plan details
+          items:
+            $ref: '#/components/schemas/EnergyAccountDetailV2_allOf_plans'
+          type: array
+        paymentSchedule:
+          $ref: '#/components/schemas/EnergyPaymentSchedule'
+        concessions:
+          description: Array may be empty if no concessions exist
+          items:
+            $ref: '#/components/schemas/EnergyConcession'
+          type: array
+        adatree:
+          $ref: '#/components/schemas/Adatree'
+      required:
+        - plans
+        - adatree
       type: object
     EnergyPaymentSchedule_cardDebit:
       description: Represents a regular credit card payment schedule. Mandatory if
@@ -5740,8 +5921,7 @@ components:
       properties:
         isTokenised:
           description: Flag indicating that the account details are tokenised and
-            cannot be shared.  False if absent.  If false then bsb and accountNumber
-            should not be expected to be included
+            cannot be shared.  False if absent
           type: boolean
         bsb:
           description: The unmasked BSB for the account to be debited. Is expected
@@ -5778,6 +5958,55 @@ components:
       x-conditional:
         - bsb
         - accountNumber
+    EnergyPaymentSchedule_digitalWallet:
+      description: Represents a regular payment from a digital wallet. Mandatory if
+        paymentScheduleUType is set to digitalWallet
+      properties:
+        name:
+          description: The name assigned to the digital wallet by the owner of the
+            wallet, else the display name provided by the digital wallet provider
+          type: string
+        identifier:
+          description: The identifier of the digital wallet (dependent on type)
+          type: string
+        type:
+          description: The type of the digital wallet identifier
+          enum:
+            - EMAIL
+            - CONTACT_NAME
+            - TELEPHONE
+          type: string
+        provider:
+          description: The provider of the digital wallet
+          enum:
+            - PAYPAL_AU
+            - OTHER
+          type: string
+        paymentFrequency:
+          description: The frequency that payments will occur.  Formatted according
+            to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations)
+            (excludes recurrence syntax)
+          type: string
+        calculationType:
+          description: The mechanism by which the payment amount is calculated.  Explanation
+            of values are as follows:<br/><ul><li>**STATIC** - Indicates a consistent,
+            static amount, per payment</li><li>**BALANCE** - Indicates that the outstanding
+            balance for the account is paid per period</li><li>**CALCULATED** - Indicates
+            that the payment amount is variable and calculated using a pre-defined
+            algorithm</li></ul>
+          enum:
+            - STATIC
+            - BALANCE
+            - CALCULATED
+          type: string
+      required:
+        - calculationType
+        - identifier
+        - name
+        - paymentFrequency
+        - provider
+        - type
+      type: object
     EnergyPaymentSchedule_manualPayment:
       description: Represents a manual payment schedule where the customer pays in
         response to a delivered statement. Mandatory if paymentScheduleUType is set
@@ -6206,7 +6435,6 @@ components:
       description: User Agent header of the consumer facing application. Mandatory for consumer present calls using a Machine token.
       schema:
         type: string
-        example: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36
   #-------------------------------
   # Reusable responses
   #-------------------------------
