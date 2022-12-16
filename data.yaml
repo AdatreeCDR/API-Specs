@@ -441,7 +441,9 @@ paths:
         - Energy
       summary: Get Electricity Usage
       description: |-
-        Obtain the list of electricity usage records that consumers have consented to share across all data holders
+        Obtain the list of electricity usage records that consumers have consented to share across all data holders. 
+        Provide Adatree-Consumer-Auth-Date, Adatree-Consumer-Ip-Address, Adatree-Consumer-User-Agent headers and consumerId parameter with exactly one value 
+        to trigger a realtime data update
       operationId: getEnergyElectricityUsage
       parameters:
         - $ref: '#/components/parameters/QueryUseCaseIds'
@@ -452,6 +454,9 @@ paths:
         - $ref: '#/components/parameters/QueryDataHolderBrandIds'
         - $ref: '#/components/parameters/QueryPage'
         - $ref: '#/components/parameters/QueryPageSize'
+        - $ref: '#/components/parameters/HeaderConsumerAuthDate'
+        - $ref: '#/components/parameters/HeaderConsumerIpAddress'
+        - $ref: '#/components/parameters/HeaderUserAgent'
       responses:
         200:
           description: Success
@@ -4398,7 +4403,6 @@ components:
             the ability to operate in an islanded mode
           type: boolean
         hasCentralProtectionControl:
-          default: false
           description: For DER installations where NSPs specify the need for additional
             forms of protection above those inbuilt in an inverter.  If absent then
             assumed to be false
@@ -5075,6 +5079,7 @@ components:
           type: string
           enum:
             - BALANCE_REFRESH_ERROR
+            - CONSUMER_PRESENT_REFRESH_ERROR
             - THROTTLED_BY_DATA_HOLDER_ERROR
         title:
           description: A short, human-readable summary of the problem.
@@ -5776,7 +5781,6 @@ components:
             - DUAL
           type: string
         isContingentPlan:
-          default: false
           description: Flag that indicates that the plan is contingent on the customer
             taking up an alternate fuel plan from the same retailer (for instance,
             if the fuelType is ELECTRICITY then a GAS plan from the same retailer
