@@ -443,7 +443,7 @@ paths:
       description: |-
         Obtain the list of electricity usage records that consumers have consented to share across all data holders. 
         Provide Adatree-Consumer-Auth-Date, Adatree-Consumer-Ip-Address, Adatree-Consumer-User-Agent headers and consumerId parameter with exactly one value 
-        to trigger a realtime data update
+        to trigger a realtime data update. Consumer headers will only be used when authenticating with a machine credential
       operationId: getEnergyElectricityUsage
       parameters:
         - $ref: '#/components/parameters/QueryUseCaseIds'
