@@ -5870,8 +5870,11 @@ components:
           items:
             $ref: '#/components/schemas/EnergyAccountDetailV2_allOf_plans'
           type: array
-        paymentSchedule:
-          $ref: '#/components/schemas/EnergyPaymentSchedule'
+        paymentSchedules:
+          description: The array of agreed payment schedules
+          items:
+            $ref: '#/components/schemas/EnergyPaymentSchedule'
+          type: array
         concessions:
           description: Array may be empty if no concessions exist
           items:
