@@ -2,7 +2,7 @@
 
 This changelog lists all additions and updates to the Adatree CDR APIs, in chronological order.
 
-### January 9, 2023
+### January 16, 2023
 
 - Add support for `accountOwnership` to Bank Account list and Bank Account Detail. The value indicating the number of customers that have ownership of the account, according to the data holder's definition of account ownership. 
 Does not indicate that all account owners are eligible consumers. Values are `UNKNOWN`, `ONE_PARTY`, `TWO_PARTY`, `MANY_PARTY`, or `OTHER`.
